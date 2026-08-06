@@ -22,7 +22,7 @@ os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
 # Email
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 app.secret_key = "secret"
-from backend.admin import admin
+from admin import admin
 app.register_blueprint(admin)
 
 app.config["MAIL_SERVER"]="smtp.gmail.com"
