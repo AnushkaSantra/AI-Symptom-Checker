@@ -2,11 +2,22 @@ from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_mail import Mail, Message
 import joblib, pandas as pd, os, json
+import os
+os.makedirs("reports", exist_ok=True)
+os.makedirs(os.path.join(os.path.dirname(__file__), "reports"), exist_ok=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
+
+# Fallback for local
+if not os.path.exists(FRONTEND_DIR):
+    FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
 print("APP.PY IN:", BASE_DIR)
 print("FRONTEND DIR:", FRONTEND_DIR, "EXISTS:", os.path.exists(FRONTEND_DIR))
+
+os.makedirs("reports", exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
 
 # Email
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
