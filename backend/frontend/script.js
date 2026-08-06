@@ -9,7 +9,8 @@ window.addEventListener('submit', function(e){
 
 let latestPrediction = null;
 let predictionChart = null;
-var FLASK_BASE_URL = window.location.port === "5000"? "" : "http://127.0.0.1:5000";
+var FLASK_BASE_URL = "";
+var BASE = "";
 
 function escapeHTML(v){
     if(v==null) return "";

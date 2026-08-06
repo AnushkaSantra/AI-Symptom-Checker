@@ -1,5 +1,5 @@
 "use strict";
-const FLASK_BASE_URL = window.location.port === "5000" ? "" : "http://127.0.0.1:5000";
+const FLASK_BASE_URL = "";
 
 document.addEventListener("DOMContentLoaded", function(){
   const form=document.getElementById("loginForm");

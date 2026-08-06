@@ -69,9 +69,9 @@ def find_file(filename):
             return base
     return FRONTEND_DIR
 
-@app.route("/")
+@app.route('/')
 def home():
-    return send_from_directory(FRONTEND_DIR, "index.html")
+    return send_from_directory(app.static_folder, 'login.html')
 
 @app.route("/patient/login")
 def patient_login():
