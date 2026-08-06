@@ -41,7 +41,7 @@ async function handleLogin(e){
     localStorage.setItem("patientLoggedIn","true");
     localStorage.setItem("patient", JSON.stringify(j.patient||{email,name:j.name}));
     showMsg("success","Login success! Redirecting...");
-    setTimeout(()=>{ window.location.href="/"; },800);
+    setTimeout(()=>{ window.location.href = "/index.html"; },800);
   }catch(err){
     showMsg("error", err.message.includes("Failed to fetch")?"Flask not running. Run python app.py":err.message);
   }finally{
