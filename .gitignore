@@ -1,0 +1,8 @@
+__pycache__/
+appointments.db
+prediction_history.json
+*.pyc
+venv/
+backend/reports/
+.env
+*.env
