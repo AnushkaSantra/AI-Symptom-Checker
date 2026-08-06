@@ -1,0 +1,239 @@
+# Professional PDF Generator for AI Symptom Checker
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import inch
+from datetime import datetime
+import os
+
+
+def _confidence_bar(c):
+    c = max(0, min(float(c), 100))
+    f = int(c // 5)
+    return "█" * f + "░" * (20 - f)
+
+
+def generate_pdf(report_data):
+
+    os.makedirs("reports", exist_ok=True)
+
+    filename = f"reports/AI_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+    doc = SimpleDocTemplate(
+        filename,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=40
+    )
+
+    styles = getSampleStyleSheet()
+
+    title = styles["Title"]
+    title.alignment = TA_CENTER
+
+    heading = styles["Heading2"]
+    normal = styles["BodyText"]
+
+    elements = []
+
+    # =====================================
+    # Header
+    # =====================================
+
+    elements.append(
+        Paragraph("<b>AI HEALTH ASSISTANT</b>", title)
+    )
+
+    elements.append(
+        Paragraph(
+            "<b>Medical Prediction Report</b>",
+            normal
+        )
+    )
+
+    elements.append(Spacer(1, 0.25 * inch))
+
+    elements.append(
+        Paragraph(
+            f"<b>Generated On:</b> {datetime.now().strftime('%d-%m-%Y %I:%M %p')}",
+            normal
+        )
+    )
+
+    elements.append(Spacer(1, 0.30 * inch))
+
+    # =====================================
+    # Patient Information
+    # =====================================
+
+    elements.append(
+        Paragraph("Patient Information", heading)
+    )
+
+    patient_table = [
+
+        ["Patient Name", report_data["patientName"]],
+        ["Age", str(report_data["patientAge"]) + " Years"],
+        ["Gender", report_data["patientGender"]]
+
+    ]
+
+    table = Table(patient_table, colWidths=[180, 280])
+
+    table.setStyle(TableStyle([
+
+        ("BACKGROUND", (0,0), (0,-1), colors.HexColor("#1976D2")),
+        ("TEXTCOLOR", (0,0), (0,-1), colors.white),
+
+        ("BACKGROUND", (1,0), (1,-1), colors.whitesmoke),
+
+        ("GRID",(0,0),(-1,-1),1,colors.grey),
+
+        ("FONTNAME",(0,0),(-1,-1),"Helvetica-Bold"),
+
+        ("BOTTOMPADDING",(0,0),(-1,-1),8),
+
+        ("TOPPADDING",(0,0),(-1,-1),8)
+
+    ]))
+
+    elements.append(table)
+
+    elements.append(Spacer(1,0.30*inch))
+
+    # =====================================
+    # Prediction Summary
+    # =====================================
+
+    elements.append(
+        Paragraph("Prediction Summary", heading)
+    )
+
+    prediction_table = [
+
+        ["Predicted Disease", report_data["disease"]],
+        ["AI Confidence", f"{float(report_data['confidence']):.2f}%"],
+        ["Severity", report_data["severity"]],
+        ["Recommended Doctor", report_data["doctor"]]
+
+    ]
+
+    table = Table(prediction_table, colWidths=[180,280])
+
+    table.setStyle(TableStyle([
+
+        ("BACKGROUND",(0,0),(0,-1),colors.HexColor("#43A047")),
+        ("TEXTCOLOR",(0,0),(0,-1),colors.white),
+
+        ("BACKGROUND",(1,0),(1,-1),colors.whitesmoke),
+
+        ("GRID",(0,0),(-1,-1),1,colors.grey),
+
+        ("FONTNAME",(0,0),(-1,-1),"Helvetica-Bold"),
+
+        ("BOTTOMPADDING",(0,0),(-1,-1),8),
+
+        ("TOPPADDING",(0,0),(-1,-1),8)
+
+    ]))
+
+    elements.append(table)
+
+    elements.append(Spacer(1,0.30*inch))
+
+    # =====================================
+    # Confidence Meter
+    # =====================================
+
+    confidence=float(report_data["confidence"])
+
+    elements.append(
+        Paragraph("AI Confidence Meter", heading)
+    )
+
+    elements.append(
+
+        Paragraph(
+
+            f"<font face='Courier'>{_confidence_bar(confidence)}</font> {confidence:.2f}%",
+
+            normal
+
+        )
+
+    )
+
+    elements.append(Spacer(1,0.30*inch))
+
+    # =====================================
+    # Description
+    # =====================================
+
+    elements.append(
+        Paragraph("Disease Description", heading)
+    )
+
+    elements.append(
+        Paragraph(report_data["description"], normal)
+    )
+
+    elements.append(Spacer(1,0.30*inch))
+
+    # =====================================
+    # Precautions
+    # =====================================
+
+    elements.append(
+        Paragraph("Recommended Precautions", heading)
+    )
+
+    for item in report_data["precautions"]:
+
+        elements.append(
+            Paragraph("• " + item, normal)
+        )
+
+    elements.append(Spacer(1,0.30*inch))
+
+    # =====================================
+    # Disclaimer
+    # =====================================
+
+    elements.append(
+        Paragraph("Medical Disclaimer", heading)
+    )
+
+    elements.append(
+
+        Paragraph(
+
+            "This report has been generated by an AI-based disease prediction system. "
+            "It is intended only for educational and informational purposes. "
+            "Always consult a qualified healthcare professional before making any medical decision.",
+
+            normal
+
+        )
+
+    )
+
+    elements.append(Spacer(1,0.40*inch))
+
+    elements.append(
+
+        Paragraph(
+
+            "<b>Generated by AI Health Assistant</b>",
+
+            title
+
+        )
+
+    )
+
+    doc.build(elements)
+
+    return filename

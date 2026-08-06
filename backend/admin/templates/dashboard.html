@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI Health Assistant</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8; --primary-light: #eff6ff;
+            --success: #16a34a; --success-light: #f0fdf4;
+            --danger: #dc2626; --danger-dark: #b91c1c; --danger-light: #fef2f2;
+            --warning: #d97706; --warning-light: #fffbeb;
+            --purple: #7c3aed; --purple-light: #f5f3ff;
+            --dark: #0f172a; --text: #1e293b; --muted: #64748b;
+            --border: #e2e8f0; --background: #f1f5f9; --white: #ffffff;
+            --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            min-height: 100vh;
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            background: radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 30%), radial-gradient(circle at bottom right, rgba(124,58,237,0.06), transparent 30%), var(--background);
+            color: var(--text);
+        }
+        .header {
+            position: sticky; top: 0; z-index: 1000;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white; padding: 16px 30px;
+            display: flex; justify-content: space-between; align-items: center; gap: 20px;
+            box-shadow: 0 6px 25px rgba(15,23,42,0.18);
+        }
+        .brand { display: flex; align-items: center; gap: 13px; }
+        .brand-icon {
+            width: 45px; height: 45px; border-radius: 13px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.16); font-size: 24px; backdrop-filter: blur(10px);
+        }
+        .brand-text h1 { font-size: 21px; line-height: 1.2; margin-bottom: 3px; }
+        .brand-text p { font-size: 12px; opacity: 0.78; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .admin-badge {
+            display: flex; align-items: center; gap: 7px;
+            padding: 8px 12px; border-radius: 999px;
+            background: rgba(255,255,255,0.13); font-size: 13px; font-weight: 600;
+        }
+        .logout {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(220,38,38,0.95); color: white;
+            padding: 10px 16px; border-radius: 10px; text-decoration: none;
+            font-size: 14px; font-weight: 700; transition: 0.2s ease;
+        }
+        .logout:hover { background: var(--danger-dark); transform: translateY(-1px); }
+        .container { width: min(1450px, calc(100% - 40px)); margin: 30px auto 60px; }
+        .welcome {
+            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #ffffff, #f8fbff);
+            padding: 30px; border: 1px solid rgba(226,232,240,0.9);
+            border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 25px;
+        }
+        .welcome::after {
+            content: ""; position: absolute; width: 180px; height: 180px;
+            right: -70px; top: -80px; border-radius: 50%; background: rgba(37,99,235,0.07);
+        }
+        .welcome h2 { position: relative; z-index: 1; margin-bottom: 8px; font-size: 26px; color: var(--dark); }
+        .welcome p { position: relative; z-index: 1; color: var(--muted); line-height: 1.6; font-size: 15px; }
+        .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-bottom: 28px; }
+        .stat-card {
+            position: relative; overflow: hidden; background: var(--white);
+            padding: 22px; border: 1px solid var(--border); border-radius: 18px;
+            box-shadow: var(--shadow); transition: 0.25s ease;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(15,23,42,0.12); }
+        .stat-card::after {
+            content: ""; position: absolute; width: 80px; height: 80px;
+            right: -25px; bottom: -25px; border-radius: 50%; background: rgba(37,99,235,0.06);
+        }
+        .stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .stat-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 21px; background: var(--primary-light); }
+        .stat-card h3 { color: var(--muted); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card p { margin: 0; font-size: 31px; line-height: 1; font-weight: 800; color: var(--dark); }
+        .stat-card:nth-child(2) .stat-icon { background: var(--success-light); }
+        .stat-card:nth-child(3) .stat-icon { background: var(--purple-light); }
+        .stat-card:nth-child(4) .stat-icon { background: var(--warning-light); }
+        .section { background: var(--white); padding: 26px; border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 28px; }
+        .section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+        .section-title { display: flex; align-items: flex-start; gap: 12px; }
+        .section-icon { width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--primary-light); font-size: 21px; }
+        .section h2 { margin: 0 0 5px; font-size: 21px; color: var(--dark); }
+        .section-description { color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .header-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .search-box { position: relative; width: min(320px, 100%); }
+        .search-box input {
+            width: 100%; padding: 11px 14px 11px 40px;
+            border: 1px solid var(--border); border-radius: 10px; outline: none;
+            font-size: 14px; background: #f8fafc; color: var(--text); transition: 0.2s ease;
+        }
+        .search-box input:focus { background: white; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+        .table-container { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
+        th { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 14px 15px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.45px; white-space: nowrap; }
+        th:first-child { border-top-left-radius: 12px; }
+        th:last-child { border-top-right-radius: 12px; }
+        td { padding: 14px 15px; border-bottom: 1px solid var(--border); color: #475569; font-size: 13px; vertical-align: middle; }
+        tbody tr { background: white; transition: 0.18s ease; }
+        tbody tr:hover { background: #f8fbff; }
+        tbody tr:last-child td { border-bottom: none; }
+        td strong { color: var(--dark); }
+        .badge { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; background: var(--success-light); color: #166534; }
+        .confidence-badge { background: var(--primary-light); color: #1d4ed8; }
+        .severity-badge { background: var(--warning-light); color: #92400e; }
+        .actions { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+        .action-btn { border: none; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 11px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; transition: 0.2s ease; }
+        .edit-btn { background: var(--primary-light); color: #1d4ed8; }
+        .edit-btn:hover { background: #dbeafe; transform: translateY(-1px); }
+        .delete-btn { background: var(--danger-light); color: #b91c1c; }
+        .delete-btn:hover { background: #fee2e2; transform: translateY(-1px); }
+        .delete-all-btn { background: var(--danger); color: white; padding: 11px 16px; border-radius: 10px; }
+        .delete-all-btn:hover { background: var(--danger-dark); transform: translateY(-1px); }
+        .delete-form { display: inline; }
+        .no-data { text-align: center; padding: 55px 25px; color: var(--muted); }
+        .empty-icon { width: 65px; height: 65px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: #f8fafc; font-size: 30px; }
+        .no-data h3 { color: var(--dark); margin-bottom: 7px; font-size: 18px; }
+        .no-data p { font-size: 13px; line-height: 1.6; }
+        .prediction-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .prediction-mini-card { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: #f8fafc; }
+        .prediction-mini-card span { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }
+        .prediction-mini-card strong { color: var(--dark); font-size: 18px; overflow-wrap: anywhere; }
+        .appointment-status { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; background: var(--success-light); color: #166534; font-size: 11px; font-weight: 800; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+        .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 35px; }
+        @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } .prediction-summary { grid-template-columns: 1fr; } }
+        @media (max-width: 750px) {
+            .header { padding: 14px 18px; } .admin-badge { display: none; }
+            .container { width: calc(100% - 24px); margin-top: 18px; }
+            .welcome { padding: 22px; } .welcome h2 { font-size: 22px; }
+            .section { padding: 18px; } .section-header { flex-direction: column; }
+            .header-right { width: 100%; } .search-box { width: 100%; }
+        }
+        @media (max-width: 520px) {
+            .stats { grid-template-columns: 1fr; } .brand-text h1 { font-size: 17px; }
+            .brand-text p { display: none; } .logout { padding: 9px 12px; font-size: 12px; }
+            .welcome { border-radius: 16px; } .section { border-radius: 16px; }
+            .actions { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="brand">
+            <div class="brand-icon">🏥</div>
+            <div class="brand-text"><h1>AI Health Assistant</h1><p>Administration & Management Portal</p></div>
+        </div>
+        <div class="header-actions">
+            <div class="admin-badge">👤 Administrator</div>
+            <a href="{{ url_for('admin.logout') }}" class="logout">🚪 Logout</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="welcome">
+            <h2>👋 Welcome, Admin</h2>
+            <p>Manage patient appointments, review AI predictions, and maintain the health assistant records from your administration dashboard.</p>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card"><div class="stat-top"><h3>Total Appointments</h3><div class="stat-icon">📅</div></div><p>{{ appointments|length }}</p></div>
+            <div class="stat-card"><div class="stat-top"><h3>Doctors</h3><div class="stat-icon">👨⚕</div></div><p>{{ appointments |map(attribute='doctor') |unique |list |length }}</p></div>
+            <div class="stat-card"><div class="stat-top"><h3>Patients</h3><div class="stat-icon">👤</div></div><p>{{ appointments |map(attribute='name') |unique |list |length }}</p></div>
+            <div class="stat-card"><div class="stat-top"><h3>AI Predictions</h3><div class="stat-icon">🧠</div></div><p>{{ predictions|length }}</p></div>
+        </section>
+
+        <section class="section">
+            <div class="section-header">
+                <div class="section-title"><div class="section-icon">📅</div><div><h2>Patient Appointments</h2><p class="section-description">View appointments booked through the AI Health Assistant.</p></div></div>
+            </div>
+            <div class="table-container">
+                {% if appointments %}
+                <table><thead><tr><th>#</th><th>Patient</th><th>Email</th><th>Phone</th><th>Doctor</th><th>Date</th><th>Time</th>                            <th>Status</th>
+                            <th>Action</th></tr></thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td><strong>{{ appointment.get("name","N/A") }}</strong></td>
+                            <td>{{ appointment.get("email","N/A") }}</td>
+                            <td>{{ appointment.get("phone","N/A") }}</td>
+                            <td>👨⚕ {{ appointment.get("doctor","N/A") }}</td>
+                            <td>{{ appointment.get("date","N/A") }}</td>
+                            <td>{{ appointment.get("time","N/A") }}</td>
+                                                        <td>
+                                <span class="appointment-status">
+                                    <span class="status-dot"></span>
+                                    {{ appointment.get("status","Booked") }}
+                                </span>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.complete_appointment', appointment_id=appointment.get('id')) }}" onsubmit="return confirm('Mark this appointment as Done? Patient will be removed from booked list.');">
+                                    <button type="submit" class="action-btn" style="background:#16a34a; color:white; padding:8px 14px; border-radius:8px; border:none; font-weight:700; cursor:pointer;">✅ Done</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data"><div class="empty-icon">📭</div><h3>No appointments yet</h3><p>Patient appointments will appear here after they are booked.</p></div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-header">
+                <div class="section-title"><div class="section-icon">🧠</div><div><h2>Prediction History</h2><p class="section-description">Review and manage AI-generated patient disease predictions.</p></div></div>
+                {% if predictions %}
+                <div class="header-right">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="predictionSearch" placeholder="Search patient or disease..." onkeyup="searchPredictions()" autocomplete="off">
+                    </div>
+                    <form method="POST" action="{{ url_for('admin.clear_all_predictions') }}" onsubmit="return confirmDeleteAll();">
+                        <button type="submit" class="action-btn delete-all-btn">🗑️ Delete All</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if predictions %}
+            <div class="prediction-summary">
+                <div class="prediction-mini-card"><span>Total Records</span><strong>{{ predictions|length }}</strong></div>
+                <div class="prediction-mini-card"><span>Latest Patient</span><strong>{{ predictions[-1].get("patientName","N/A") }}</strong></div>
+                <div class="prediction-mini-card"><span>Latest Disease</span><strong>{{ predictions[-1].get("disease","N/A") }}</strong></div>
+            </div>
+
+            <div class="table-container">
+                <table id="predictionTable">
+                    <thead><tr><th>#</th><th>Patient Name</th><th>Age</th><th>Gender</th><th>Predicted Disease</th><th>Confidence</th><th>Severity</th><th>Doctor</th><th>Date & Time</th><th>Actions</th></tr></thead>
+                    <tbody>
+                        {% for prediction in predictions %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td><strong>{{ prediction.get("patientName","N/A") }}</strong></td>
+                            <td>{{ prediction.get("patientAge","N/A") }}</td>
+                            <td>{{ prediction.get("patientGender","N/A") }}</td>
+                            <td>🦠 {{ prediction.get("disease","N/A") }}</td>
+                            <td><span class="badge confidence-badge">{{ prediction.get("confidence",0) }}%</span></td>
+                            <td><span class="badge severity-badge">{{ prediction.get("severity","Unknown") }}</span></td>
+                            <td>👨⚕ {{ prediction.get("doctor","General Physician") }}</td>
+                            <td>{{ prediction.get("created","N/A") }}</td>
+                            <td>
+                                <div class="actions">
+                                    <a href="{{ url_for('admin.edit_prediction', prediction_id=prediction.get('id')) }}" class="action-btn edit-btn">✏ Edit</a>
+                                    <form method="POST" action="{{ url_for('admin.delete_prediction_route', prediction_id=prediction.get('id')) }}" class="delete-form" onsubmit="return confirmDelete();">
+                                        <button type="submit" class="action-btn delete-btn">🗑 Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="no-data"><div class="empty-icon">🧠</div><h3>No prediction history yet</h3><p>Prediction records will appear here after a patient uses the AI symptom checker.</p></div>
+            {% endif %}
+        </section>
+
+        <div class="footer">🏥 AI Health Assistant &nbsp;•&nbsp; Admin Management Portal</div>
+    </main>
+
+    <script>
+        function searchPredictions() {
+            const input = document.getElementById("predictionSearch");
+            const table = document.getElementById("predictionTable");
+            if (!input || !table) return;
+            const search = input.value.toLowerCase().trim();
+            const rows = table.querySelectorAll("tbody tr");
+            rows.forEach(function(row){
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search) ? "" : "none";
+            });
+        }
+        function confirmDelete() {
+            return confirm("Are you sure you want to delete this prediction record?\n\nThis action cannot be undone.");
+        }
+        function confirmDeleteAll() {
+            const count = document.querySelectorAll("#predictionTable tbody tr").length;
+            return confirm("Are you sure you want to DELETE ALL " + count + " prediction records?\n\nThis action cannot be undone.");
+        }
+    </script>
+</body>
+</html>

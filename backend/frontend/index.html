@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Assistant</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* FIX: Side by side layout */
+        .prediction-layout{ display:grid; grid-template-columns: 1.7fr 1fr; gap:22px; align-items:start; }
+        .prediction-result-area .result-card{ background:#fff; padding:18px; border-radius:12px; }
+        .probability-area{ background:#fff; padding:18px; border-radius:12px; position:sticky; top:20px; }
+        .chart-container{ height:320px; margin-top:12px; }
+        .appointment-success{ background:#e6f4ea; border:1px solid #34a853; padding:16px; border-radius:10px; color:#137333; margin-top:14px; }
+        .appointment-error{ background:#fce8e6; border:1px solid #d93025; padding:12px; border-radius:10px; color:#a50e0e; margin-top:14px; }
+        .appointment-loading{ background:#e8f0fe; padding:12px; border-radius:10px; margin-top:14px; }
+        @media(max-width:900px){ .prediction-layout{ grid-template-columns: 1fr; } .probability-area{ position:static; } }
+        .dark .prediction-result-area .result-card, .dark .probability-area{ background:#1e1e1e; }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen"><div class="loading-content"><div class="loading-spinner"></div><h2>AI Health Assistant</h2><p>Loading...</p></div></div>
+    <header class="main-header">
+        <div class="header-content"><div><h1>🩺 AI Health Assistant</h1><p>AI-powered symptom analysis</p></div><button type="button" id="themeToggle" class="theme-toggle">🌙 Dark Mode</button></div>
+    </header>
+    <main class="main-container">
+        <div id="predictionWrapper">
+            <section class="patient-card">
+                <h2>👤 Patient Information</h2>
+                <div class="patient-grid">
+                    <div class="form-group"><label>Name</label><input type="text" id="patientName" autocomplete="off"></div>
+                    <div class="form-group"><label>Age</label><input type="number" id="patientAge" min="0" max="120"></div>
+                    <div class="form-group"><label>Gender</label><select id="patientGender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+                </div>
+            </section>
+            <section class="symptom-card" style="margin-top:24px;">
+                <h2>🔍 Select Symptoms</h2>
+                <div class="search-wrapper"><input type="text" id="search" placeholder="Search symptoms..." autocomplete="off"></div>
+                <div id="symptoms" class="symptoms-container"><div class="symptoms-loading">🔄 Loading symptoms...</div></div>
+                <div id="predictDiseaseButton" class="predict-btn main-predict-btn" role="button" tabindex="0" style="text-align:center;">🔮 Predict Disease</div>
+            </section>
+        </div>
+
+        <section class="dashboard-grid">
+            <div class="dashboard-card"><span>👤</span><div><p>Patient</p><strong id="cardPatient">—</strong></div></div>
+            <div class="dashboard-card"><span>🩺</span><div><p>Disease</p><strong id="cardDisease">—</strong></div></div>
+            <div class="dashboard-card"><span>📊</span><div><p>Confidence</p><strong id="cardConfidence">—</strong></div></div>
+            <div class="dashboard-card"><span>⚠</span><div><p>Severity</p><strong id="cardSeverity">—</strong></div></div>
+        </section>
+
+        <section class="prediction-card">
+            <h2>🧠 AI Prediction</h2>
+            <div id="predictionContent"><div class="welcome-box"><h3>👋 Ready</h3><p>Enter details and click Predict</p></div></div>
+        </section>
+
+        <section class="appointment-card">
+            <h2>📅 Book Appointment</h2>
+            <form id="appointmentForm" novalidate>
+                <div class="appointment-grid">
+                    <div class="form-group"><label>Patient Name</label><input type="text" id="appointmentName" required></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="appointmentEmail" required></div>
+                    <div class="form-group"><label>Phone</label><input type="tel" id="appointmentPhone" required></div>
+                    <div class="form-group">
+                        <label>Choose Doctor / Specialist</label>
+                        <select id="appointmentDoctor" required>
+                            <option value="">-- Select Doctor --</option>
+                            <option value="General Physician">General Physician</option>
+                            <option value="Cardiologist">Cardiologist</option>
+                            <option value="Neurologist">Neurologist</option>
+                            <option value="Dermatologist">Dermatologist</option>
+                            <option value="Gastroenterologist">Gastroenterologist</option>
+                            <option value="Orthopedist">Orthopedist</option>
+                            <option value="Pulmonologist">Pulmonologist</option>
+                            <option value="ENT Specialist">ENT Specialist</option>
+                            <option value="Ophthalmologist">Ophthalmologist</option>
+                            <option value="Psychiatrist">Psychiatrist</option>
+                            <option value="Urologist">Urologist</option>
+                            <option value="Endocrinologist">Endocrinologist</option>
+                            <option value="Allergist">Allergist</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Date</label><input type="date" id="appointmentDate" required></div>
+                    <div class="form-group"><label>Time</label><input type="time" id="appointmentTime" required></div>
+                </div>
+                <button type="submit" class="predict-btn" id="bookAppointmentButton">✅ Book Appointment</button>
+            </form>
+            <div id="appointmentResult"></div>
+        </section>
+    </main>
+
+    <button type="button" id="chatToggle" class="chat-toggle">💬</button>
+    <div id="chatWindow" class="chat-window" style="display:none"><div class="chat-header"><strong>🤖 AI Assistant</strong></div><div id="chatMessages" class="chat-messages"><div class="bot-message">Hello! How can I help?</div></div><div class="chat-input-area"><input type="text" id="chatInput" autocomplete="off"><button type="button" id="micBtn">🎤</button><button type="button" id="sendBtn">➤</button></div></div>
+
+    <script src="script.js?v=14"></script>
+</body>
+</html>

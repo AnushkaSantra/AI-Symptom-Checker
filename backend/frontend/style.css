@@ -1,0 +1,3032 @@
+/* =========================================================
+   AI HEALTHCARE ASSISTANT
+   PROFESSIONAL UI / DESIGN SYSTEM
+========================================================= */
+
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary: #0f766e;
+    --accent: #06b6d4;
+
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warning: #ea580c;
+    --purple: #7c3aed;
+
+    --text: #0f172a;
+    --text-soft: #475569;
+    --text-muted: #64748b;
+
+    --background: #eef6fb;
+    --surface: rgba(255, 255, 255, 0.94);
+    --surface-solid: #ffffff;
+
+    --border: rgba(148, 163, 184, 0.22);
+    --border-strong: rgba(37, 99, 235, 0.18);
+
+    --shadow-sm:
+        0 4px 15px rgba(15, 23, 42, 0.06);
+
+    --shadow-md:
+        0 12px 30px rgba(15, 23, 42, 0.08);
+
+    --shadow-lg:
+        0 20px 50px rgba(15, 23, 42, 0.12);
+
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+
+    --transition: 0.25s ease;
+}
+
+
+/* =========================================================
+   GLOBAL RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    min-height: 100vh;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(6, 182, 212, 0.10),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 20%,
+            rgba(37, 99, 235, 0.10),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #eef7fb 0%,
+            #f5f9fd 50%,
+            #edf5fb 100%
+        );
+
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
+
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   SUBTLE HEALTHCARE BACKGROUND
+========================================================= */
+
+body::before {
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: -1;
+
+    opacity: 0.35;
+
+    background-image:
+        linear-gradient(
+            rgba(37, 99, 235, 0.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(37, 99, 235, 0.025) 1px,
+            transparent 1px
+        );
+
+    background-size: 35px 35px;
+}
+
+
+/* =========================================================
+   LOADING SCREEN
+========================================================= */
+
+#loadingScreen {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #ffffff 0%,
+            #eef7fb 100%
+        );
+
+    transition:
+        opacity 0.4s ease;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-content h2 {
+    margin-top: 15px;
+
+    color: var(--primary);
+
+    font-size: 20px;
+}
+
+.loading-content p {
+    margin-top: 6px;
+
+    color: var(--text-muted);
+
+    font-size: 14px;
+}
+
+.loading-spinner {
+    width: 52px;
+    height: 52px;
+
+    margin: 0 auto;
+
+    border: 4px solid #dbeafe;
+
+    border-top-color: var(--primary);
+
+    border-right-color: var(--accent);
+
+    border-radius: 50%;
+
+    animation:
+        spin 0.8s linear infinite;
+
+    box-shadow:
+        0 0 25px rgba(37, 99, 235, 0.12);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.main-header {
+    position: relative;
+
+    overflow: hidden;
+
+    color: #ffffff;
+
+    padding: 28px 30px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0f4c81 0%,
+            #2563eb 48%,
+            #0891b2 100%
+        );
+
+    box-shadow:
+        0 10px 35px rgba(15, 76, 129, 0.22);
+}
+
+.main-header::before {
+    content: "";
+
+    position: absolute;
+
+    width: 280px;
+    height: 280px;
+
+    right: -80px;
+    top: -150px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+}
+
+.main-header::after {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    left: 35%;
+
+    bottom: -150px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.06);
+}
+
+.header-content {
+    position: relative;
+
+    z-index: 2;
+
+    width: min(
+        1400px,
+        calc(100% - 10px)
+    );
+
+    margin: auto;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 25px;
+}
+
+.header-content h1 {
+    font-size: clamp(
+        24px,
+        3vw,
+        34px
+    );
+
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+
+    margin-bottom: 6px;
+}
+
+.header-content p {
+    color: rgba(
+        255,
+        255,
+        255,
+        0.86
+    );
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   THEME BUTTON
+========================================================= */
+
+.theme-toggle {
+    border: 1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.22
+        );
+
+    padding: 11px 18px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.12
+        );
+
+    backdrop-filter:
+        blur(12px);
+
+    color: #ffffff;
+
+    cursor: pointer;
+
+    font-weight: 700;
+
+    transition:
+        transform var(--transition),
+        background var(--transition),
+        box-shadow var(--transition);
+}
+
+.theme-toggle:hover {
+    transform:
+        translateY(-2px);
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.20
+        );
+
+    box-shadow:
+        0 8px 20px
+        rgba(0, 0, 0, 0.12);
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.main-container {
+    width: min(
+        1400px,
+        calc(100% - 40px)
+    );
+
+    margin: 32px auto 50px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 24px;
+}
+
+
+/* =========================================================
+   COMMON CARDS
+========================================================= */
+
+.patient-card,
+.symptom-card,
+.prediction-card,
+.appointment-card {
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        var(--surface);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        var(--radius-lg);
+
+    padding: 28px;
+
+    box-shadow:
+        var(--shadow-md);
+
+    backdrop-filter:
+        blur(16px);
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+}
+
+.patient-card::before,
+.symptom-card::before,
+.prediction-card::before,
+.appointment-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 3px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--primary),
+            var(--accent),
+            var(--secondary)
+        );
+
+    opacity: 0.9;
+}
+
+.patient-card:hover,
+.symptom-card:hover,
+.prediction-card:hover,
+.appointment-card:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        var(--shadow-lg);
+
+    border-color:
+        var(--border-strong);
+}
+
+.patient-card h2,
+.symptom-card h2,
+.prediction-card h2,
+.appointment-card h2 {
+    color: var(--text);
+
+    font-size: 21px;
+
+    font-weight: 750;
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   SECTION TITLES
+========================================================= */
+
+.patient-card h2::before,
+.symptom-card h2::before,
+.prediction-card h2::before,
+.appointment-card h2::before {
+    content: "";
+
+    display: inline-block;
+
+    width: 5px;
+    height: 20px;
+
+    margin-right: 10px;
+
+    vertical-align: -3px;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--primary),
+            var(--accent)
+        );
+}
+
+
+/* =========================================================
+   PATIENT FORM
+========================================================= */
+
+.patient-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
+
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.form-group label {
+    color: var(--text-soft);
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+}
+
+.form-group input,
+.form-group select,
+.search-wrapper input,
+.chat-input-area input {
+    width: 100%;
+
+    min-height: 46px;
+
+    padding:
+        12px 14px;
+
+    border:
+        1px solid #dbe3ec;
+
+    border-radius:
+        var(--radius-sm);
+
+    outline: none;
+
+    font-size: 14px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.92
+        );
+
+    color:
+        #111827;
+
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition),
+        transform var(--transition);
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.search-wrapper input:hover,
+.chat-input-area input:hover {
+    border-color:
+        #b8c7d9;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.search-wrapper input:focus,
+.chat-input-area input:focus {
+    border-color:
+        var(--primary);
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(
+            37,
+            99,
+            235,
+            0.10
+        );
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-wrapper {
+    position: relative;
+
+    margin-bottom: 20px;
+}
+
+.search-wrapper input {
+    max-width: 700px;
+
+    padding-left: 16px;
+
+    box-shadow:
+        var(--shadow-sm);
+}
+
+
+/* =========================================================
+   SYMPTOMS CONTAINER
+========================================================= */
+
+.symptoms-container {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fill,
+            minmax(
+                220px,
+                1fr
+            )
+        );
+
+    gap: 11px;
+
+    max-height: 360px;
+
+    overflow-y: auto;
+
+    padding: 5px;
+
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        #93c5fd
+        transparent;
+}
+
+.symptoms-container::-webkit-scrollbar {
+    width: 7px;
+}
+
+.symptoms-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.symptoms-container::-webkit-scrollbar-thumb {
+    background:
+        #93c5fd;
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   SYMPTOM ITEMS
+========================================================= */
+
+.symptom-item {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 46px;
+
+    padding:
+        11px 13px;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius:
+        12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f8fbff
+        );
+
+    color: var(--text-soft);
+
+    cursor: pointer;
+
+    transition:
+        transform var(--transition),
+        background var(--transition),
+        border-color var(--transition),
+        box-shadow var(--transition);
+}
+
+.symptom-item:hover {
+    transform:
+        translateY(-2px);
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #ecfeff
+        );
+
+    border-color:
+        #93c5fd;
+
+    box-shadow:
+        0 6px 15px
+        rgba(
+            37,
+            99,
+            235,
+            0.08
+        );
+}
+
+.symptom-item:has(input:checked) {
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #e0f2fe
+        );
+
+    border-color:
+        #60a5fa;
+
+    box-shadow:
+        0 5px 14px
+        rgba(
+            37,
+            99,
+            235,
+            0.10
+        );
+
+    color:
+        #1e3a8a;
+}
+
+.symptom-item input {
+    width: 17px;
+    height: 17px;
+
+    accent-color:
+        var(--primary);
+
+    cursor: pointer;
+}
+
+.symptoms-loading,
+.symptoms-error {
+    padding: 25px;
+
+    text-align: center;
+
+    border:
+        1px dashed #cbd5e1;
+
+    border-radius:
+        var(--radius-md);
+
+    background:
+        rgba(
+            248,
+            250,
+            252,
+            0.8
+        );
+
+    color:
+        var(--text-muted);
+}
+
+
+/* =========================================================
+   BUTTON SYSTEM
+========================================================= */
+
+.predict-btn {
+    position: relative;
+
+    overflow: hidden;
+
+    border: none;
+
+    min-height: 45px;
+
+    padding:
+        12px 21px;
+
+    border-radius:
+        12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            #0b74de
+        );
+
+    color:
+        #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 18px
+        rgba(
+            37,
+            99,
+            235,
+            0.20
+        );
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        filter var(--transition);
+}
+
+.predict-btn::after {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -100%;
+
+    width: 70%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(
+                255,
+                255,
+                255,
+                0.22
+            ),
+            transparent
+        );
+
+    transform:
+        skewX(-20deg);
+
+    transition:
+        left 0.6s ease;
+}
+
+.predict-btn:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 12px 25px
+        rgba(
+            37,
+            99,
+            235,
+            0.28
+        );
+
+    filter:
+        brightness(1.03);
+}
+
+.predict-btn:hover::after {
+    left: 140%;
+}
+
+.predict-btn:active {
+    transform:
+        translateY(0);
+}
+
+.main-predict-btn {
+    margin-top: 20px;
+
+    min-width: 210px;
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+.dashboard-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        );
+
+    gap: 18px;
+}
+
+.dashboard-card {
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.92
+        );
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        var(--radius-md);
+
+    padding: 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    box-shadow:
+        var(--shadow-sm);
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.dashboard-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 80px;
+    height: 80px;
+
+    right: -35px;
+    bottom: -35px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            37,
+            99,
+            235,
+            0.05
+        );
+}
+
+.dashboard-card:hover {
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        var(--shadow-md);
+}
+
+.dashboard-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #e0f2fe
+        );
+
+    font-size: 24px;
+}
+
+.dashboard-card p {
+    font-size: 12px;
+
+    color:
+        var(--text-muted);
+
+    margin-bottom: 5px;
+
+    font-weight: 600;
+}
+
+.dashboard-card strong {
+    font-size: 16px;
+
+    color:
+        var(--text);
+}
+
+
+/* =========================================================
+   PREDICTION HEADING
+========================================================= */
+
+.prediction-heading {
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   WELCOME BOX
+========================================================= */
+
+.welcome-box {
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 28px;
+
+    text-align: center;
+
+    border-radius:
+        var(--radius-md);
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #ecfeff
+        );
+
+    border:
+        1px solid #bfdbfe;
+
+    box-shadow:
+        inset 0 1px
+        rgba(
+            255,
+            255,
+            255,
+            0.8
+        );
+}
+
+.welcome-box::before {
+    content: "";
+
+    position: absolute;
+
+    width: 150px;
+    height: 150px;
+
+    right: -70px;
+    top: -70px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            37,
+            99,
+            235,
+            0.07
+        );
+}
+
+.welcome-box h3 {
+    position: relative;
+
+    margin-bottom: 10px;
+
+    color:
+        #1d4ed8;
+
+    font-size: 21px;
+}
+
+.welcome-box p {
+    position: relative;
+
+    color:
+        #475569;
+
+    line-height: 1.7;
+}
+
+.error-box {
+    background:
+        #fef2f2;
+
+    border-color:
+        #fecaca;
+
+    color:
+        #991b1b;
+}
+
+
+/* =========================================================
+   PREDICTION LAYOUT
+========================================================= */
+
+.prediction-layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(
+            0,
+            1.25fr
+        )
+        minmax(
+            340px,
+            0.75fr
+        );
+
+    gap: 25px;
+
+    align-items: start;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   LEFT RESULT AREA
+========================================================= */
+
+.prediction-result-area {
+    min-width: 0;
+}
+
+.result-card {
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.96
+        );
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        var(--radius-lg);
+
+    padding: 30px;
+
+    box-shadow:
+        var(--shadow-md);
+
+    min-width: 0;
+
+    transition:
+        box-shadow var(--transition);
+}
+
+.result-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2563eb,
+            #06b6d4,
+            #0f766e
+        );
+}
+
+.result-card:hover {
+    box-shadow:
+        var(--shadow-lg);
+}
+
+.result-title {
+    font-size:
+        clamp(
+            23px,
+            2.4vw,
+            30px
+        );
+
+    line-height: 1.3;
+
+    color:
+        var(--text);
+
+    margin-bottom: 18px;
+
+    overflow-wrap: anywhere;
+
+    font-weight: 800;
+}
+
+.confidence-box {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding:
+        9px 14px;
+
+    border-radius:
+        999px;
+
+    background:
+        #eff6ff;
+
+    border:
+        1px solid #bfdbfe;
+
+    color:
+        #1d4ed8;
+
+    font-weight: 700;
+
+    font-size: 13px;
+
+    margin-bottom: 10px;
+}
+
+.result-card hr {
+    border: none;
+
+    border-top:
+        1px solid #e2e8f0;
+
+    margin: 24px 0;
+}
+
+.result-card h3 {
+    margin-bottom: 10px;
+
+    color:
+        var(--text);
+
+    font-size: 17px;
+
+    font-weight: 750;
+}
+
+.result-card p {
+    line-height: 1.75;
+
+    color:
+        var(--text-soft);
+
+    font-size: 14px;
+}
+
+.result-card ul {
+    padding-left: 22px;
+
+    color:
+        var(--text-soft);
+
+    line-height: 1.75;
+
+    font-size: 14px;
+}
+
+.result-card li {
+    margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   SEVERITY
+========================================================= */
+
+.severity-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        8px 15px;
+
+    border-radius:
+        999px;
+
+    font-weight: 750;
+
+    font-size: 13px;
+
+    background:
+        #fff7ed;
+
+    color:
+        #c2410c;
+
+    border:
+        1px solid #fed7aa;
+}
+
+
+/* =========================================================
+   MEDICINES
+========================================================= */
+
+.medicine-section h4 {
+    margin:
+        17px 0 8px;
+
+    color:
+        var(--text-soft);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   RESULT ACTIONS
+========================================================= */
+
+.result-actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+.hospital-btn {
+    background:
+        linear-gradient(
+            135deg,
+            #16a34a,
+            #15803d
+        );
+}
+
+.hospital-btn:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #15803d,
+            #166534
+        );
+}
+
+.email-btn {
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #6d28d9
+        );
+}
+
+.email-btn:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #6d28d9,
+            #5b21b6
+        );
+}
+
+
+/* =========================================================
+   DISCLAIMER
+========================================================= */
+
+.medical-disclaimer {
+    margin-top: 25px;
+
+    padding: 16px 18px;
+
+    border-radius:
+        12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7ed,
+            #fffbeb
+        );
+
+    border:
+        1px solid #fed7aa;
+
+    color:
+        #9a3412 !important;
+
+    font-size: 13px;
+
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   RIGHT PROBABILITY BOX
+========================================================= */
+
+.probability-area {
+    position: sticky;
+
+    top: 20px;
+
+    min-width: 0;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.96
+        );
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        var(--radius-lg);
+
+    padding: 25px;
+
+    box-shadow:
+        var(--shadow-md);
+
+    transition:
+        box-shadow var(--transition);
+}
+
+.probability-area:hover {
+    box-shadow:
+        var(--shadow-lg);
+}
+
+.probability-header {
+    margin-bottom: 20px;
+}
+
+.probability-header h3 {
+    font-size: 20px;
+
+    color:
+        var(--text);
+
+    margin-bottom: 5px;
+
+    font-weight: 800;
+}
+
+.probability-header p {
+    color:
+        var(--text-muted);
+
+    font-size: 13px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   MAIN PROBABILITY
+========================================================= */
+
+.main-probability {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 16px;
+
+    margin-bottom: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #ecfeff
+        );
+
+    border:
+        1px solid #bfdbfe;
+
+    border-radius:
+        14px;
+
+    box-shadow:
+        0 5px 15px
+        rgba(
+            37,
+            99,
+            235,
+            0.06
+        );
+}
+
+.probability-disease {
+    font-weight: 750;
+
+    color:
+        #1e3a8a;
+
+    overflow-wrap: anywhere;
+
+    font-size: 14px;
+}
+
+.probability-value {
+    font-size: 19px;
+
+    font-weight: 850;
+
+    color:
+        var(--primary);
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   OTHER PROBABILITIES
+========================================================= */
+
+.probability-list {
+    width: 100%;
+}
+
+.side-probability-item {
+    display: grid;
+
+    grid-template-columns:
+        minmax(
+            0,
+            1fr
+        );
+
+    gap: 7px;
+
+    margin-bottom: 17px;
+}
+
+.side-probability-name {
+    display: flex;
+
+    gap: 7px;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    color:
+        var(--text-soft);
+
+    overflow-wrap: anywhere;
+}
+
+.side-probability-bar {
+    width: 100%;
+
+    height: 9px;
+
+    background:
+        #e2e8f0;
+
+    border-radius:
+        999px;
+
+    overflow: hidden;
+}
+
+.side-probability-fill {
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #4f46e5,
+            #2563eb,
+            #06b6d4
+        );
+
+    border-radius:
+        999px;
+
+    transition:
+        width 0.7s ease;
+}
+
+.side-probability-percent {
+    text-align: right;
+
+    font-size: 12px;
+
+    font-weight: 750;
+
+    color:
+        var(--primary);
+}
+
+
+/* =========================================================
+   CHART
+========================================================= */
+
+.chart-container {
+    position: relative;
+
+    width: 100%;
+
+    height: 350px;
+
+    margin-top: 25px;
+
+    padding-top: 22px;
+
+    border-top:
+        1px solid #e2e8f0;
+}
+
+.chart-container::before {
+    content: "Probability Overview";
+
+    display: block;
+
+    margin-bottom: 10px;
+
+    color:
+        var(--text-soft);
+
+    font-size: 13px;
+
+    font-weight: 750;
+}
+
+.chart-container canvas {
+    display: block;
+
+    width: 100% !important;
+
+    height: calc(
+        100% - 25px
+    ) !important;
+}
+
+
+/* =========================================================
+   APPOINTMENT
+========================================================= */
+
+.appointment-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 18px;
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   APPOINTMENT SUCCESS
+========================================================= */
+
+.appointment-success {
+    margin-top: 20px;
+
+    padding: 26px;
+
+    border-radius:
+        var(--radius-md);
+
+    background:
+        linear-gradient(
+            135deg,
+            #ecfdf5,
+            #f0fdf4
+        );
+
+    border:
+        1px solid #86efac;
+
+    text-align: center;
+
+    animation:
+        appointmentSuccessFadeIn
+        0.35s ease;
+
+    box-shadow:
+        0 8px 20px
+        rgba(
+            22,
+            163,
+            74,
+            0.08
+        );
+}
+
+.success-icon {
+    font-size: 42px;
+
+    margin-bottom: 10px;
+}
+
+.appointment-success h3 {
+    margin:
+        0 0 10px;
+
+    color:
+        #166534;
+
+    font-size: 22px;
+}
+
+.appointment-success p {
+    margin:
+        8px 0;
+
+    color:
+        #374151;
+
+    line-height: 1.6;
+}
+
+.appointment-summary {
+    margin:
+        18px auto;
+
+    padding: 17px;
+
+    max-width: 500px;
+
+    background:
+        #ffffff;
+
+    border-radius:
+        13px;
+
+    text-align: left;
+
+    border:
+        1px solid #bbf7d0;
+
+    box-shadow:
+        var(--shadow-sm);
+}
+
+.appointment-summary p {
+    margin:
+        8px 0;
+}
+
+.appointment-confirmation {
+    margin-top: 15px;
+
+    font-size: 14px;
+}
+
+.appointment-confirmation strong {
+    color:
+        #166534;
+}
+
+
+/* =========================================================
+   APPOINTMENT ERROR
+========================================================= */
+
+.appointment-error {
+    margin-top: 20px;
+
+    padding:
+        16px 20px;
+
+    border-radius:
+        12px;
+
+    background:
+        #fef2f2;
+
+    border:
+        1px solid #fca5a5;
+
+    color:
+        #991b1b;
+
+    font-weight: 650;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   APPOINTMENT LOADING
+========================================================= */
+
+.appointment-loading {
+    margin-top: 20px;
+
+    padding:
+        16px 20px;
+
+    border-radius:
+        12px;
+
+    background:
+        #eff6ff;
+
+    border:
+        1px solid #93c5fd;
+
+    color:
+        #1d4ed8;
+
+    font-weight: 650;
+}
+
+
+/* =========================================================
+   SUCCESS ANIMATION
+========================================================= */
+
+@keyframes appointmentSuccessFadeIn {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* =========================================================
+   CHAT BUTTON
+========================================================= */
+
+.chat-toggle {
+    position: fixed;
+
+    right: 25px;
+
+    bottom: 25px;
+
+    width: 60px;
+
+    height: 60px;
+
+    border:
+        3px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.8
+        );
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--accent)
+        );
+
+    color:
+        #ffffff;
+
+    font-size: 23px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 10px 30px
+        rgba(
+            37,
+            99,
+            235,
+            0.28
+        );
+
+    z-index: 2000;
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.chat-toggle:hover {
+    transform:
+        translateY(-4px)
+        scale(1.04);
+
+    box-shadow:
+        0 15px 35px
+        rgba(
+            37,
+            99,
+            235,
+            0.35
+        );
+}
+
+
+/* =========================================================
+   CHAT WINDOW
+========================================================= */
+
+.chat-window {
+    position: fixed;
+
+    right: 25px;
+
+    bottom: 98px;
+
+    width: 370px;
+
+    max-width:
+        calc(
+            100vw - 30px
+        );
+
+    height: 500px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.97
+        );
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        20px;
+
+    box-shadow:
+        0 25px 60px
+        rgba(
+            15,
+            23,
+            42,
+            0.18
+        );
+
+    overflow: hidden;
+
+    flex-direction:
+        column;
+
+    z-index: 1999;
+
+    backdrop-filter:
+        blur(18px);
+}
+
+
+/* =========================================================
+   CHAT HEADER
+========================================================= */
+
+.chat-header {
+    padding:
+        17px 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #1d4ed8,
+            #0891b2
+        );
+
+    color:
+        #ffffff;
+}
+
+.chat-header h3 {
+    font-size: 16px;
+
+    margin-bottom: 3px;
+}
+
+.chat-header p {
+    font-size: 12px;
+
+    opacity: 0.85;
+}
+
+
+/* =========================================================
+   CHAT MESSAGES
+========================================================= */
+
+.chat-messages {
+    flex: 1;
+
+    overflow-y: auto;
+
+    padding: 16px;
+
+    display: flex;
+
+    flex-direction:
+        column;
+
+    gap: 10px;
+
+    background:
+        #f8fafc;
+}
+
+.user-message,
+.bot-message {
+    max-width: 85%;
+
+    padding:
+        10px 13px;
+
+    border-radius:
+        14px;
+
+    line-height: 1.5;
+
+    overflow-wrap: anywhere;
+
+    font-size: 13px;
+
+    box-shadow:
+        0 3px 8px
+        rgba(
+            15,
+            23,
+            42,
+            0.05
+        );
+}
+
+.user-message {
+    align-self:
+        flex-end;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    color:
+        #ffffff;
+
+    border-bottom-right-radius:
+        4px;
+}
+
+.bot-message {
+    align-self:
+        flex-start;
+
+    background:
+        #ffffff;
+
+    color:
+        #1f2937;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-bottom-left-radius:
+        4px;
+}
+
+
+/* =========================================================
+   CHAT INPUT
+========================================================= */
+
+.chat-input-area {
+    display: flex;
+
+    gap: 7px;
+
+    padding: 11px;
+
+    border-top:
+        1px solid #e2e8f0;
+
+    background:
+        #ffffff;
+}
+
+.chat-input-area input {
+    flex: 1;
+
+    min-width: 0;
+
+    min-height: 42px;
+}
+
+.mic-btn,
+.send-btn {
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    border: none;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    color:
+        #ffffff;
+
+    transition:
+        transform var(--transition),
+        filter var(--transition);
+}
+
+.mic-btn:hover,
+.send-btn:hover {
+    transform:
+        translateY(-1px);
+
+    filter:
+        brightness(1.05);
+}
+
+.mic-btn {
+    background:
+        #64748b;
+}
+
+.send-btn {
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #0891b2
+        );
+}
+
+.mic-btn.listening {
+    background:
+        #dc2626;
+
+    animation:
+        pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow:
+            0 0 0 0
+            rgba(
+                220,
+                38,
+                38,
+                0.35
+            );
+    }
+
+    70% {
+        box-shadow:
+            0 0 0 10px
+            rgba(
+                220,
+                38,
+                38,
+                0
+            );
+    }
+
+    100% {
+        box-shadow:
+            0 0 0 0
+            rgba(
+                220,
+                38,
+                38,
+                0
+            );
+    }
+}
+
+
+/* =========================================================
+   EMERGENCY CARD
+========================================================= */
+
+.emergency-card {
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 22px;
+
+    margin-bottom: 20px;
+
+    border-radius:
+        var(--radius-md);
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff1f2,
+            #fef2f2
+        );
+
+    border:
+        1px solid #fca5a5;
+
+    color:
+        #991b1b;
+
+    box-shadow:
+        0 8px 20px
+        rgba(
+            220,
+            38,
+            38,
+            0.07
+        );
+}
+
+.emergency-card::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    width: 5px;
+
+    background:
+        #dc2626;
+}
+
+.emergency-card h2 {
+    color:
+        #dc2626;
+
+    margin-bottom: 10px;
+
+    font-size: 20px;
+}
+
+.emergency-card p {
+    margin-bottom: 10px;
+
+    line-height: 1.6;
+}
+
+.emergency-card button {
+    border: none;
+
+    padding:
+        11px 17px;
+
+    border-radius:
+        10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #dc2626,
+            #b91c1c
+        );
+
+    color:
+        #ffffff;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+.emergency-card button:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 8px 18px
+        rgba(
+            220,
+            38,
+            38,
+            0.22
+        );
+}
+
+
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+body.dark {
+    --text: #f8fafc;
+    --text-soft: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --background: #07111f;
+    --surface: rgba(
+        15,
+        23,
+        42,
+        0.94
+    );
+
+    --surface-solid: #0f172a;
+
+    --border:
+        rgba(
+            71,
+            85,
+            105,
+            0.45
+        );
+
+    --border-strong:
+        rgba(
+            59,
+            130,
+            246,
+            0.30
+        );
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(
+                6,
+                182,
+                212,
+                0.08
+            ),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 20%,
+            rgba(
+                37,
+                99,
+                235,
+                0.10
+            ),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #07111f,
+            #0b1729,
+            #0f172a
+        );
+
+    color:
+        #e5e7eb;
+}
+
+body.dark .main-header {
+    box-shadow:
+        0 10px 35px
+        rgba(
+            0,
+            0,
+            0,
+            0.35
+        );
+}
+
+body.dark .patient-card,
+body.dark .symptom-card,
+body.dark .prediction-card,
+body.dark .appointment-card,
+body.dark .dashboard-card,
+body.dark .result-card,
+body.dark .probability-area {
+    background:
+        rgba(
+            15,
+            23,
+            42,
+            0.92
+        );
+
+    border-color:
+        #26364d;
+}
+
+body.dark .patient-card h2,
+body.dark .symptom-card h2,
+body.dark .prediction-card h2,
+body.dark .appointment-card h2,
+body.dark .result-title,
+body.dark .result-card h3,
+body.dark .probability-header h3,
+body.dark .dashboard-card strong {
+    color:
+        #f8fafc;
+}
+
+body.dark .form-group label {
+    color:
+        #cbd5e1;
+}
+
+body.dark .result-card p,
+body.dark .result-card ul,
+body.dark .side-probability-name {
+    color:
+        #cbd5e1;
+}
+
+body.dark .form-group input,
+body.dark .form-group select,
+body.dark .search-wrapper input {
+    background:
+        #0b1729;
+
+    color:
+        #f8fafc;
+
+    border-color:
+        #334155;
+}
+
+body.dark .form-group input:focus,
+body.dark .form-group select:focus,
+body.dark .search-wrapper input:focus {
+    background:
+        #0f172a;
+
+    border-color:
+        #60a5fa;
+}
+
+body.dark .symptom-item {
+    background:
+        linear-gradient(
+            135deg,
+            #0b1729,
+            #0f1d31
+        );
+
+    border-color:
+        #26364d;
+
+    color:
+        #cbd5e1;
+}
+
+body.dark .symptom-item:hover {
+    background:
+        #172554;
+
+    border-color:
+        #3b82f6;
+}
+
+body.dark .symptom-item:has(input:checked) {
+    background:
+        #172554;
+
+    border-color:
+        #3b82f6;
+
+    color:
+        #bfdbfe;
+}
+
+body.dark .symptoms-loading,
+body.dark .symptoms-error {
+    background:
+        #0b1729;
+
+    border-color:
+        #334155;
+
+    color:
+        #94a3b8;
+}
+
+body.dark .dashboard-icon {
+    background:
+        #172554;
+}
+
+body.dark .dashboard-card p {
+    color:
+        #94a3b8;
+}
+
+body.dark .welcome-box {
+    background:
+        linear-gradient(
+            135deg,
+            #172554,
+            #083344
+        );
+
+    border-color:
+        #1e40af;
+}
+
+body.dark .welcome-box h3 {
+    color:
+        #93c5fd;
+}
+
+body.dark .welcome-box p {
+    color:
+        #cbd5e1;
+}
+
+body.dark .confidence-box,
+body.dark .main-probability {
+    background:
+        #172554;
+
+    border-color:
+        #1e40af;
+}
+
+body.dark .probability-disease {
+    color:
+        #bfdbfe;
+}
+
+body.dark .result-card hr,
+body.dark .chart-container,
+body.dark .chat-input-area {
+    border-color:
+        #26364d;
+}
+
+body.dark .side-probability-bar {
+    background:
+        #334155;
+}
+
+body.dark .medical-disclaimer {
+    background:
+        #431407;
+
+    border-color:
+        #9a3412;
+
+    color:
+        #fed7aa !important;
+}
+
+body.dark .appointment-success {
+    background:
+        linear-gradient(
+            135deg,
+            #052e1b,
+            #064e3b
+        );
+
+    border-color:
+        #166534;
+}
+
+body.dark .appointment-success h3 {
+    color:
+        #86efac;
+}
+
+body.dark .appointment-success p {
+    color:
+        #d1d5db;
+}
+
+body.dark .appointment-summary {
+    background:
+        #0f172a;
+
+    border-color:
+        #166534;
+}
+
+body.dark .appointment-error {
+    background:
+        #450a0a;
+
+    border-color:
+        #991b1b;
+
+    color:
+        #fecaca;
+}
+
+body.dark .appointment-loading {
+    background:
+        #172554;
+
+    border-color:
+        #1d4ed8;
+
+    color:
+        #bfdbfe;
+}
+
+body.dark .emergency-card {
+    background:
+        linear-gradient(
+            135deg,
+            #450a0a,
+            #3f1111
+        );
+
+    border-color:
+        #991b1b;
+
+    color:
+        #fecaca;
+}
+
+body.dark .chat-window {
+    background:
+        #0f172a;
+
+    border-color:
+        #26364d;
+}
+
+body.dark .chat-messages {
+    background:
+        #07111f;
+}
+
+body.dark .bot-message {
+    background:
+        #172033;
+
+    color:
+        #e5e7eb;
+
+    border-color:
+        #26364d;
+}
+
+body.dark .chat-input-area {
+    background:
+        #0f172a;
+}
+
+body.dark .chat-input-area input {
+    background:
+        #07111f;
+
+    color:
+        #f8fafc;
+
+    border-color:
+        #334155;
+}
+
+body.dark #loadingScreen {
+    background:
+        radial-gradient(
+            circle at center,
+            #0f172a,
+            #07111f
+        );
+
+    color:
+        #ffffff;
+}
+
+
+/* =========================================================
+   RESPONSIVE - 1100px
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .prediction-layout {
+        grid-template-columns:
+            1fr;
+    }
+
+    .probability-area {
+        position: static;
+    }
+
+    .dashboard-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 900px
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .patient-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 800px
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .header-content {
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
+    }
+
+    .theme-toggle {
+        align-self:
+            flex-start;
+    }
+
+    .appointment-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - 600px
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .main-container {
+        width:
+            calc(
+                100% - 20px
+            );
+
+        margin:
+            15px auto 35px;
+
+        gap: 17px;
+    }
+
+    .main-header {
+        padding:
+            22px 18px;
+    }
+
+    .header-content {
+        width: 100%;
+    }
+
+    .header-content h1 {
+        font-size: 24px;
+    }
+
+    .patient-card,
+    .symptom-card,
+    .prediction-card,
+    .appointment-card {
+        padding:
+            20px 17px;
+
+        border-radius:
+            17px;
+    }
+
+    .patient-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .dashboard-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .prediction-layout {
+        gap: 17px;
+    }
+
+    .result-card,
+    .probability-area {
+        padding:
+            21px 17px;
+
+        border-radius:
+            17px;
+    }
+
+    .result-actions {
+        flex-direction:
+            column;
+    }
+
+    .result-actions .predict-btn {
+        width: 100%;
+    }
+
+    .main-predict-btn {
+        width: 100%;
+    }
+
+    .chart-container {
+        height: 300px;
+    }
+
+    .chat-window {
+        right: 10px;
+
+        bottom: 85px;
+
+        width:
+            calc(
+                100vw - 20px
+            );
+
+        height: 470px;
+    }
+
+    .chat-toggle {
+        right: 15px;
+
+        bottom: 15px;
+
+        width: 55px;
+
+        height: 55px;
+    }
+
+    .main-probability {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+    }
+
+    .probability-value {
+        font-size: 17px;
+    }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+button,
+input,
+select {
+    font-family:
+        inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline:
+        3px solid
+        rgba(
+            37,
+            99,
+            235,
+            0.25
+        );
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            0.01ms !important;
+    }
+
+}
+/* ===== FIXED SIDE BY SIDE LAYOUT ===== */
+.prediction-layout{
+  display: grid !important;
+  grid-template-columns: 1.6fr 0.9fr !important;
+  gap: 24px !important;
+  align-items: start !important;
+  margin-top: 20px;
+}
+
+.prediction-result-area .result-card{
+  height: auto;
+}
+
+.probability-area{
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 20px;
+}
+
+.probability-list{
+  margin-bottom: 20px;
+}
+
+.chart-container{
+  width: 100%;
+  height: 350px;
+  margin-top: 10px;
+}
+
+.chart-container canvas{
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Mobile - stack */
+@media (max-width: 900px){
+  .prediction-layout{
+    grid-template-columns: 1fr !important;
+  }
+  .probability-area{
+    position: static;
+  }
+}
