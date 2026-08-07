@@ -1,24 +1,17 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_mail import Mail, Message
-import joblib, pandas as pd, os, json
+import joblib, pandas as pd, os, json, traceback
 from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# FIX: Prefer backend/frontend first (what Render uses)
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 if not os.path.exists(FRONTEND_DIR):
     FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
 
-print("APP.PY IN:", BASE_DIR)
-print("FRONTEND DIR:", FRONTEND_DIR, "EXISTS:", os.path.exists(FRONTEND_DIR))
-
-os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
 
-# App
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 app.secret_key = "secret"
 
@@ -28,22 +21,22 @@ app.register_blueprint(admin)
 app.config["MAIL_SERVER"]="smtp.gmail.com"
 app.config["MAIL_PORT"]=587
 app.config["MAIL_USE_TLS"]=True
-app.config["MAIL_USERNAME"]=os.environ.get("MAIL_USERNAME","")
-app.config["MAIL_PASSWORD"]=os.environ.get("MAIL_PASSWORD","")
+app.config["MAIL_USERNAME"]=os.environ.get("MAIL_USERNAME","").strip()
+app.config["MAIL_PASSWORD"]=os.environ.get("MAIL_PASSWORD","").replace(" ","").strip()
 app.config["MAIL_DEFAULT_SENDER"]=app.config["MAIL_USERNAME"] or "demo@aihealth.local"
 mail=Mail(app)
 CORS(app)
 
-# Model - auto find
-model_path = "models/disease_model.pkl"
-if not os.path.exists(os.path.join(BASE_DIR, model_path)):
-    model_path = "../models/disease_model.pkl"
-model = joblib.load(os.path.join(BASE_DIR, model_path))
+# Model load
+model_path = os.path.join(BASE_DIR, "models/disease_model.pkl")
+if not os.path.exists(model_path):
+    model_path = os.path.join(BASE_DIR, "..", "models/disease_model.pkl")
+model = joblib.load(model_path)
 
-dataset_path = "dataset/Training.csv"
-if not os.path.exists(os.path.join(BASE_DIR, dataset_path)):
-    dataset_path = "../dataset/Training.csv"
-df = pd.read_csv(os.path.join(BASE_DIR, dataset_path))
+dataset_path = os.path.join(BASE_DIR, "dataset/Training.csv")
+if not os.path.exists(dataset_path):
+    dataset_path = os.path.join(BASE_DIR, "..", "dataset/Training.csv")
+df = pd.read_csv(dataset_path)
 if "Unnamed: 133" in df.columns:
     df = df.drop(columns=["Unnamed: 133"])
 symptoms = list(df.columns[:-1])
@@ -52,8 +45,8 @@ from services.chatbot_service import get_reply
 from services.disease_info import disease_information
 from utils.pdf_generator import generate_pdf
 from medicine_info import medicine_database
-from appointment_database import add_appointment, get_appointments, is_slot_available
-from prediction_database import add_prediction, get_predictions
+from appointment_database import add_appointment
+from prediction_database import add_prediction
 from doctor_recommendation import get_recommended_doctor
 
 USERS_FILE = os.path.join(BASE_DIR, "users.json")
@@ -71,7 +64,6 @@ def find_file(filename):
             return base
     return FRONTEND_DIR
 
-# -------- ROUTES --------
 @app.route('/')
 def home():
     base = find_file("login.html")
@@ -125,17 +117,19 @@ def predict():
 def download_report():
     data=request.get_json()
     fn=generate_pdf({"patientName":data.get("patientName","Unknown"),"patientAge":data.get("patientAge","Unknown"),"patientGender":data.get("patientGender","Unknown"),"disease":data.get("disease","Unknown"),"confidence":data.get("confidence",0),"description":data.get("description",""),"severity":data.get("severity","Unknown"),"doctor":data.get("doctor","General Physician"),"precautions":data.get("precautions",[])})
+    if not os.path.isabs(fn):
+        fn = os.path.join(BASE_DIR, fn)
     return send_file(fn, as_attachment=True)
 
 @app.route("/send-report-email", methods=["POST"])
 def send_report_email():
-    data = request.get_json()
-    recipient = data.get("email","").strip()
+    data = request.get_json() or {}
+    recipient = str(data.get("email","")).strip()
     if not recipient or "@" not in recipient:
-        return jsonify({"success":False,"message":"Invalid email"}), 400
-
+        return jsonify({"success":False,"message":"Invalid email"}),400
+    if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
+        return jsonify({"success":False,"message":"Mail not configured on server - Set MAIL_USERNAME/PASSWORD in Render"}),500
     try:
-        # 1. Generate PDF
         pdf_path = generate_pdf({
             "patientName": data.get("patientName","Unknown"),
             "patientAge": data.get("patientAge","Unknown"),
@@ -147,31 +141,22 @@ def send_report_email():
             "doctor": data.get("doctor","General Physician"),
             "precautions": data.get("precautions",[])
         })
+        if not os.path.isabs(pdf_path):
+            pdf_path = os.path.join(BASE_DIR, pdf_path)
 
-        # 2. Send Email with PDF attached
-        subject = f"AI Health Report - {data.get('disease','Report')}"
-        body = f"""Hello {data.get('patientName','Patient')},
-
-Your AI Symptom Checker report is attached.
-
-Disease: {data.get('disease')}
-Confidence: {data.get('confidence')}%
-Doctor: {data.get('doctor')}
-Severity: {data.get('severity')}
-
-Take care,
-AI-Symptom Checker
-"""
-        msg = Message(subject=subject, recipients=[recipient], body=body)
+        msg = Message(
+            subject=f"AI Health Report - {data.get('disease','Report')}",
+            recipients=[recipient],
+            body=f"Hello {data.get('patientName','Patient')},\n\nYour AI Symptom Report is attached.\nDisease: {data.get('disease')}\nConfidence: {data.get('confidence')}%\nDoctor: {data.get('doctor')}\n\nTake care."
+        )
         with open(pdf_path, "rb") as fp:
             msg.attach("Health_Report.pdf", "application/pdf", fp.read())
 
         mail.send(msg)
-        return jsonify({"success":True,"message":f"✅ Report successfully sent to {recipient}"})
-
+        return jsonify({"success":True,"message":f"Report successfully sent to {recipient} - Check inbox/spam"})
     except Exception as e:
-        print("Email Error:", str(e))
-        return jsonify({"success":False,"message":f"Failed to send email: {str(e)}"}), 500
+        traceback.print_exc()
+        return jsonify({"success":False,"message":f"Email failed: {str(e)}"}),500
 
 @app.route("/chatbot", methods=["POST"])
 def chatbot():
@@ -179,7 +164,7 @@ def chatbot():
     try:
         reply=get_reply(data.get("message",""))
     except:
-        reply="Sorry"
+        reply="Sorry, chatbot offline"
     return jsonify({"reply":reply})
 
 @app.route("/book-appointment", methods=["POST"])
@@ -209,12 +194,10 @@ def log_api():
             return jsonify({"success":True,"name":u["name"],"patient":{"name":u["name"],"email":u["email"]}})
     return jsonify({"success":False,"message":"Invalid Email or Password"}),401
 
-# This MUST be last
 @app.route('/<path:path>')
 def serve_static(path):
     if os.path.exists(os.path.join(FRONTEND_DIR, path)):
         return send_from_directory(FRONTEND_DIR, path)
-    # also check patient subfolder
     if os.path.exists(os.path.join(FRONTEND_DIR, "patient", path)):
         return send_from_directory(os.path.join(FRONTEND_DIR, "patient"), path)
     return send_from_directory(FRONTEND_DIR, path)

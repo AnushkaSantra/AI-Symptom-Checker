@@ -186,11 +186,11 @@ async function downloadReport(){
     }catch(e){ alert("Download failed: "+e.message); }
 }
 async function sendReportEmail(){
-    if(!latestPrediction){ alert("Please predict a disease first!"); return; }
+    if(!latestPrediction){ alert("Please predict first!"); return; }
     var email=prompt("Enter patient email address:");
     if(!email) return;
     email=email.trim();
-    if(email.indexOf("@")===-1){ alert("Please enter a valid email!"); return; }
+    if(email.indexOf("@")===-1){ alert("Invalid email!"); return; }
     try{
         var r=await fetchWithTimeout(FLASK_BASE_URL+"/send-report-email",{
             method:"POST",
@@ -208,10 +208,10 @@ async function sendReportEmail(){
                 precautions:latestPrediction.Precautions
             })
         });
-        var j=await r.json().catch(function(){ return {success:true, message:"Report generated!"}; });
-        alert(j.message || j.error || "✅ Report processed for "+email);
+        var j=await r.json();
+        alert(j.message);
     }catch(err){
-        alert("✅ Report generated successfully for "+email+"! (Demo Mode) Please use Download PDF");
+        alert("❌ "+err.message);
     }
 }
 function findHospitals(){
