@@ -155,7 +155,6 @@ async function predictDisease(e){
             docSelect.value=result.Doctor;
         }
         var top=result["Top Predictions"]||[];
-        // === FIXED SIDE BY SIDE - 2 CLOSING DIVS ADDED ===
         var html=''+
             '<div class="prediction-layout">'+
                 '<div class="prediction-result-area">'+
@@ -218,16 +217,23 @@ async function downloadReport(){
 }
 async function sendReportEmail(){
     if(!latestPrediction){ alert("Please predict first!"); return; }
-    var email=prompt("Enter patient email address:");
-    if(!email) return;
-    email=email.trim();
-    if(email.indexOf("@")===-1){ alert("Invalid email!"); return; }
+    var loginEmail = localStorage.getItem("patientEmail");
+    if(!loginEmail){
+        try{ var p = JSON.parse(localStorage.getItem("patient")||"{}"); loginEmail = p.email; }catch(e){}
+    }
+    if(!loginEmail){
+        alert("Please login again - email not found");
+        window.location.href = "/login.html";
+        return;
+    }
+    var emailBtn = document.getElementById("sendReportEmailButton");
+    if(emailBtn){ emailBtn.disabled=true; emailBtn.textContent="⏳ Sending..."; }
     try{
         var r=await fetchWithRetry(FLASK_BASE_URL+"/send-report-email",{
             method:"POST",
             headers:{"Content-Type":"application/json","Accept":"application/json"},
             body:JSON.stringify({
-                email:email,
+                email: loginEmail,
                 patientName:latestPrediction.patientName,
                 patientAge:latestPrediction.patientAge,
                 patientGender:latestPrediction.patientGender,
@@ -242,10 +248,32 @@ async function sendReportEmail(){
         var txt = await r.text();
         var j;
         try{ j=JSON.parse(txt); } catch(e){ throw new Error(txt || "Server waking, retrying"); }
-        alert(j.message);
+        showSuccessPopup(loginEmail);
     }catch(err){
         alert("❌ "+err.message);
+    }finally{
+        if(emailBtn){ emailBtn.disabled=false; emailBtn.textContent="📧 Email"; }
     }
+}
+function showSuccessPopup(email){
+    var old = document.getElementById("successPopupOverlay");
+    if(old) old.remove();
+    var overlay = document.createElement("div");
+    overlay.id = "successPopupOverlay";
+    overlay.innerHTML = `
+      <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;">
+        <div style="background:#fff;padding:30px;border-radius:20px;max-width:400px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2);animation: popIn 0.3s ease;">
+          <div style="font-size:60px;">✅</div>
+          <h2 style="color:#137333;margin:15px 0 10px 0;">Report Sent Successfully!</h2>
+          <p style="color:#333;font-size:16px;margin:10px 0;">Your PDF report has been sent to your login email:</p>
+          <div style="background:#e6f4ea;padding:12px;border-radius:10px;margin:15px 0;font-weight:bold;color:#137333;word-break:break-all;">${escapeHTML(email)}</div>
+          <p style="color:#666;font-size:13px;">Please check your inbox (and spam folder)</p>
+          <button onclick="document.getElementById('successPopupOverlay').remove()" style="margin-top:20px;background:#137333;color:#fff;border:none;padding:12px 30px;border-radius:10px;font-size:15px;cursor:pointer;">OK, Got it</button>
+        </div>
+      <style>@keyframes popIn{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}</style>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(()=>{ var el=document.getElementById("successPopupOverlay"); if(el) el.remove(); }, 5000);
 }
 function findHospitals(){
     if(!navigator.geolocation) return alert("No geolocation");
@@ -304,15 +332,15 @@ async function bookAppointment(e){
 document.addEventListener("DOMContentLoaded",function(){
     var style=document.createElement("style");
     style.innerHTML=`
-      .prediction-layout{
+     .prediction-layout{
             display: grid!important;
             grid-template-columns: 1.3fr 0.7fr!important;
             gap: 24px!important;
             align-items: start!important;
             width: 100%!important;
         }
-      .prediction-result-area{ width: 100%!important; }
-      .probability-area{
+     .prediction-result-area{ width: 100%!important; }
+     .probability-area{
             background: #fff!important;
             border-radius: 16px!important;
             padding: 20px!important;
@@ -320,10 +348,10 @@ document.addEventListener("DOMContentLoaded",function(){
             position: sticky!important;
             top: 20px!important;
         }
-      .chart-container{ width:100%!important; height:350px!important; }
+     .chart-container{ width:100%!important; height:350px!important; }
         @media (max-width: 900px){
-          .prediction-layout{ grid-template-columns: 1fr!important; }
-          .probability-area{ position: static!important; }
+         .prediction-layout{ grid-template-columns: 1fr!important; }
+         .probability-area{ position: static!important; }
         }
     `;
     document.head.appendChild(style);

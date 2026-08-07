@@ -37,8 +37,9 @@ async function handleLogin(e){
       body:JSON.stringify({email,password:pwd})
     });
     const j=await r.json();
-    if(!r.ok || !j.success) throw new Error(j.message||"Login failed");
+    if(!r.ok ||!j.success) throw new Error(j.message||"Login failed");
     localStorage.setItem("patientLoggedIn","true");
+    localStorage.setItem("patientEmail", email);
     localStorage.setItem("patient", JSON.stringify(j.patient||{email,name:j.name}));
     showMsg("success","Login success! Redirecting...");
     setTimeout(()=>{ window.location.href = "/index.html"; },800);
