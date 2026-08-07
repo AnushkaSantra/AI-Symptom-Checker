@@ -1,10 +1,15 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from flask_mail import Mail, Message
-from threading import Thread
-import joblib, pandas as pd, os, json, traceback
+import joblib, pandas as pd, os, json, traceback, socket
 from dotenv import load_dotenv
 load_dotenv()
+
+# FIX FOR RENDER NETWORK UNREACHABLE
+orig_getaddrinfo = socket.getaddrinfo
+def getaddrinfo_ipv4(host, port, family=0, type=0, proto=0, flags=0):
+    return [r for r in orig_getaddrinfo(host, port, family, type, proto, flags) if r[0] == socket.AF_INET]
+socket.getaddrinfo = getaddrinfo_ipv4
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
@@ -20,15 +25,15 @@ from admin import admin
 app.register_blueprint(admin)
 
 app.config["MAIL_SERVER"]="smtp.gmail.com"
-app.config["MAIL_PORT"]=587
-app.config["MAIL_USE_TLS"]=True
+app.config["MAIL_PORT"]=int(os.environ.get("MAIL_PORT", 465))
+app.config["MAIL_USE_TLS"]=os.environ.get("MAIL_USE_TLS","false").lower()=="true"
+app.config["MAIL_USE_SSL"]=os.environ.get("MAIL_USE_SSL","true").lower()=="true"
 app.config["MAIL_USERNAME"]=os.environ.get("MAIL_USERNAME","").strip()
 app.config["MAIL_PASSWORD"]=os.environ.get("MAIL_PASSWORD","").replace(" ","").strip()
 app.config["MAIL_DEFAULT_SENDER"]=app.config["MAIL_USERNAME"] or "demo@aihealth.local"
 mail=Mail(app)
 CORS(app)
 
-# Model load
 model_path = os.path.join(BASE_DIR, "models/disease_model.pkl")
 if not os.path.exists(model_path):
     model_path = os.path.join(BASE_DIR, "..", "models/disease_model.pkl")
@@ -64,15 +69,6 @@ def find_file(filename):
         if os.path.exists(os.path.join(base, filename)):
             return base
     return FRONTEND_DIR
-
-def send_async_email(app_ctx, msg):
-    with app_ctx.app_context():
-        try:
-            mail.send(msg)
-            print(f"Email sent to {msg.recipients}")
-        except Exception as e:
-            print(f"Async Email Error: {e}")
-            traceback.print_exc()
 
 @app.route('/')
 def home():
@@ -138,7 +134,7 @@ def send_report_email():
     if not recipient or "@" not in recipient:
         return jsonify({"success":False,"message":"Invalid email"}),400
     if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
-        return jsonify({"success":False,"message":"Mail not configured on server - Set MAIL_USERNAME/PASSWORD in Render"}),500
+        return jsonify({"success":False,"message":"Mail not configured"}),500
     try:
         pdf_path = generate_pdf({
             "patientName": data.get("patientName","Unknown"),
@@ -162,12 +158,13 @@ def send_report_email():
         with open(pdf_path, "rb") as fp:
             msg.attach("Health_Report.pdf", "application/pdf", fp.read())
 
-        # Run in background - FIXES ABORT ERROR
-        Thread(target=send_async_email, args=(app, msg)).start()
-        return jsonify({"success":True,"message":f"✅ Report sending to {recipient} - Will arrive in 20 sec, check inbox/spam"})
+        mail.send(msg)
+        print(f"SUCCESS: Email sent to {recipient}")
+        return jsonify({"success":True,"message":f"✅ Report sent to {recipient} - Check inbox now"})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"success":False,"message":f"Email failed: {str(e)}"}),500
+        print(f"FAILED: {e}")
+        return jsonify({"success":False,"message":f"❌ Failed: {str(e)}"}),500
 
 @app.route("/chatbot", methods=["POST"])
 def chatbot():
