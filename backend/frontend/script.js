@@ -21,14 +21,12 @@ function escapeHTML(v){
 
 async function fetchWithTimeout(url, opt, t){
     if(!opt) opt={};
-    if(!t) t=90000; // 90 sec default - no more abort
+    if(!t) t=90000;
     var c=new AbortController();
     var id=setTimeout(function(){ c.abort(); }, t);
     try{ opt.signal=c.signal; return await fetch(url, opt); }
     catch(err){
-        if(err.name === 'AbortError'){
-            throw new Error("WAKING");
-        }
+        if(err.name === 'AbortError') throw new Error("WAKING");
         throw err;
     } finally{ clearTimeout(id); }
 }
@@ -41,7 +39,7 @@ async function fetchWithRetry(url, opt, t, retries){
             return await fetchWithTimeout(url, opt, t);
         } catch(err){
             if(err.message==="WAKING" && attempt < retries){
-                showPredictionMessage("⏳ Server Waking Up","Render free server is sleeping, waking up automatically... please wait 10 sec, don't refresh");
+                showPredictionMessage("⏳ Server Waking Up","Render free server is sleeping, waking up automatically... please wait 10 sec");
                 await new Promise(r=>setTimeout(r, 10000));
                 continue;
             }
@@ -157,6 +155,7 @@ async function predictDisease(e){
             docSelect.value=result.Doctor;
         }
         var top=result["Top Predictions"]||[];
+        // === FIXED SIDE BY SIDE - 2 CLOSING DIVS ADDED ===
         var html=''+
             '<div class="prediction-layout">'+
                 '<div class="prediction-result-area">'+
@@ -174,6 +173,7 @@ async function predictDisease(e){
                             '<button type="button" class="predict-btn email-btn" id="sendReportEmailButton">📧 Email</button>'+
                         '</div>'+
                     '</div>'+
+                '</div>'+
                 '<div class="probability-area">'+
                     '<h3>📊 Disease Probability</h3>'+
                     '<div class="probability-list">'+createProbHTML(top,result)+'</div>'+
@@ -241,14 +241,10 @@ async function sendReportEmail(){
         }, 120000, 2);
         var txt = await r.text();
         var j;
-        try{ j=JSON.parse(txt); } catch(e){ throw new Error("Server waking, auto retrying..."); }
+        try{ j=JSON.parse(txt); } catch(e){ throw new Error(txt || "Server waking, retrying"); }
         alert(j.message);
     }catch(err){
-        if(err.message.includes("WAKING") || err.message.includes("waking")){
-            alert("⏳ Server was sleeping, waking up... Please click Email again after 15 seconds");
-        } else {
-            alert("❌ "+err.message);
-        }
+        alert("❌ "+err.message);
     }
 }
 function findHospitals(){
@@ -308,12 +304,30 @@ async function bookAppointment(e){
 document.addEventListener("DOMContentLoaded",function(){
     var style=document.createElement("style");
     style.innerHTML=`
-     .prediction-layout{ display: grid!important; grid-template-columns: 1.6fr 0.9fr!important; gap: 24px!important; align-items: start!important; }
-     .probability-area{ background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: sticky; top: 20px; }
-     .chart-container{ width:100%; height:350px; }
-        @media (max-width: 900px){.prediction-layout{ grid-template-columns: 1fr!important; }.probability-area{ position: static; } }
+      .prediction-layout{
+            display: grid!important;
+            grid-template-columns: 1.3fr 0.7fr!important;
+            gap: 24px!important;
+            align-items: start!important;
+            width: 100%!important;
+        }
+      .prediction-result-area{ width: 100%!important; }
+      .probability-area{
+            background: #fff!important;
+            border-radius: 16px!important;
+            padding: 20px!important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08)!important;
+            position: sticky!important;
+            top: 20px!important;
+        }
+      .chart-container{ width:100%!important; height:350px!important; }
+        @media (max-width: 900px){
+          .prediction-layout{ grid-template-columns: 1fr!important; }
+          .probability-area{ position: static!important; }
+        }
     `;
     document.head.appendChild(style);
+
     loadSymptoms();
     var searchInput=document.getElementById("search");
     if(searchInput){
