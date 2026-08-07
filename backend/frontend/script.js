@@ -21,25 +21,38 @@ function escapeHTML(v){
 
 async function fetchWithTimeout(url, opt, t){
     if(!opt) opt={};
-    if(!t) t=30000;
+    if(!t) t=90000; // 90 sec default - no more abort
     var c=new AbortController();
     var id=setTimeout(function(){ c.abort(); }, t);
-    try{
-        opt.signal=c.signal;
-        return await fetch(url, opt);
-    }catch(err){
+    try{ opt.signal=c.signal; return await fetch(url, opt); }
+    catch(err){
         if(err.name === 'AbortError'){
-            throw new Error("Server waking up (Render free tier) - Please wait 10 sec and try again");
+            throw new Error("WAKING");
         }
         throw err;
-    }finally{
-        clearTimeout(id);
+    } finally{ clearTimeout(id); }
+}
+
+async function fetchWithRetry(url, opt, t, retries){
+    if(!t) t=90000;
+    if(retries==null) retries=1;
+    for(var attempt=0; attempt<=retries; attempt++){
+        try{
+            return await fetchWithTimeout(url, opt, t);
+        } catch(err){
+            if(err.message==="WAKING" && attempt < retries){
+                showPredictionMessage("⏳ Server Waking Up","Render free server is sleeping, waking up automatically... please wait 10 sec, don't refresh");
+                await new Promise(r=>setTimeout(r, 10000));
+                continue;
+            }
+            throw err;
+        }
     }
 }
 
 async function parseJSONResponse(res,name){
     var txt=await res.text();
-    if(!txt.trim()) throw new Error(name+" empty");
+    if(!txt.trim()) throw new Error(name+" empty - server waking, retrying");
     try{ return JSON.parse(txt); } catch(e){ throw new Error(name+" invalid JSON"); }
 }
 
@@ -47,7 +60,6 @@ function showPredictionMessage(title,msg){
     var el=document.getElementById("predictionContent");
     if(el) el.innerHTML='<div class="welcome-box"><h3>'+escapeHTML(title)+'</h3><p>'+msg+'</p></div>';
 }
-
 function getSeverityColor(s){
     if(!s) return "#0b74de";
     var t=String(s).toLowerCase();
@@ -56,11 +68,9 @@ function getSeverityColor(s){
     if(t.indexOf("high")!==-1 || t.indexOf("critical")!==-1 || t.indexOf("severe")!==-1) return "#dc3545";
     return "#0b74de";
 }
-
 function getSelectedSymptoms(){
     return Array.from(document.querySelectorAll("#symptoms input:checked")).map(function(c){ return c.value; }).filter(Boolean);
 }
-
 function searchSymptoms(){
     var searchEl=document.getElementById("search");
     var v=searchEl? searchEl.value.toLowerCase() : "";
@@ -68,12 +78,11 @@ function searchSymptoms(){
         el.style.display=el.textContent.toLowerCase().indexOf(v)!==-1?"flex":"none";
     });
 }
-
 async function loadSymptoms(){
     var box=document.getElementById("symptoms");
     if(!box) return;
     try{
-        var r=await fetchWithTimeout(FLASK_BASE_URL+"/symptoms",{headers:{Accept:"application/json"}}, 60000);
+        var r=await fetchWithRetry(FLASK_BASE_URL+"/symptoms",{headers:{Accept:"application/json"}}, 90000, 2);
         var data=await parseJSONResponse(r,"Symptoms");
         box.innerHTML="";
         var uniq=[...new Set(data.filter(Boolean).map(function(s){ return String(s).trim(); }))].sort(function(a,b){ return a.localeCompare(b); });
@@ -85,10 +94,14 @@ async function loadSymptoms(){
             box.appendChild(lab);
         });
     }catch(e){
-        box.innerHTML='<div class="symptoms-error">❌ '+escapeHTML(e.message)+'</div>';
+        if(e.message==="WAKING"){
+            box.innerHTML='<div class="symptoms-error">⏳ Server waking up... retrying in 10 sec</div>';
+            setTimeout(loadSymptoms, 10000);
+        } else {
+            box.innerHTML='<div class="symptoms-error">❌ '+escapeHTML(e.message)+'</div>';
+        }
     }
 }
-
 function createProbHTML(preds,res){
     var main=res["Predicted Disease"]||"Unknown";
     var mainP=Math.max(0,Math.min(Number(res.Confidence)||0,100));
@@ -100,7 +113,6 @@ function createProbHTML(preds,res){
     });
     return h;
 }
-
 async function predictDisease(e){
     if(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }
     var nameEl=document.getElementById("patientName");
@@ -114,18 +126,17 @@ async function predictDisease(e){
     if(!Number.isFinite(age)||age<0||age>120){ showPredictionMessage("⚠ Invalid Age","0-120"); return false; }
     var sel=getSelectedSymptoms();
     if(sel.length===0){ showPredictionMessage("⚠ No Symptoms","Select at least 1"); return false; }
-    showPredictionMessage("🔄 Predicting...","AI analysing...");
+    showPredictionMessage("🔄 Predicting...","AI analysing... please wait 15 sec if server was sleeping");
     try{
-        var r=await fetchWithTimeout(FLASK_BASE_URL+"/predict",{
+        var r=await fetchWithRetry(FLASK_BASE_URL+"/predict",{
             method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"},
             body:JSON.stringify({symptoms:sel, patientName:name, patientAge:age, patientGender:gender})
-        }, 60000);
+        }, 90000, 2);
         var result=await parseJSONResponse(r,"Predict");
         if(!r.ok) throw new Error(result.error||("HTTP "+r.status));
         if(!result["Predicted Disease"]) throw new Error("No disease returned");
         latestPrediction=result;
         latestPrediction.patientName=name; latestPrediction.patientAge=age; latestPrediction.patientGender=gender;
-
         var cardPatient=document.getElementById("cardPatient");
         var cardDisease=document.getElementById("cardDisease");
         var cardConf=document.getElementById("cardConfidence");
@@ -134,7 +145,6 @@ async function predictDisease(e){
         if(cardDisease) cardDisease.textContent=result["Predicted Disease"];
         if(cardConf) cardConf.textContent=Number(result.Confidence||0).toFixed(2)+"%";
         if(cardSev) cardSev.textContent=result.Severity||"Unknown";
-
         var docSelect=document.getElementById("appointmentDoctor");
         if(docSelect && result.Doctor){
             var exists=false;
@@ -146,7 +156,6 @@ async function predictDisease(e){
             }
             docSelect.value=result.Doctor;
         }
-
         var top=result["Top Predictions"]||[];
         var html=''+
             '<div class="prediction-layout">'+
@@ -165,7 +174,6 @@ async function predictDisease(e){
                             '<button type="button" class="predict-btn email-btn" id="sendReportEmailButton">📧 Email</button>'+
                         '</div>'+
                     '</div>'+
-                '</div>'+
                 '<div class="probability-area">'+
                     '<h3>📊 Disease Probability</h3>'+
                     '<div class="probability-list">'+createProbHTML(top,result)+'</div>'+
@@ -182,11 +190,15 @@ async function predictDisease(e){
         if(hospBtn) hospBtn.addEventListener("click",findHospitals);
         if(emailBtn) emailBtn.addEventListener("click",sendReportEmail);
     }catch(err){
-        showPredictionMessage("❌ Error", escapeHTML(err.message));
+        if(err.message==="WAKING"){
+            showPredictionMessage("⏳ Server Waking", "Server is waking up, auto-retrying in 10 sec... please don't refresh");
+            setTimeout(function(){ predictDisease(null); }, 10000);
+        } else {
+            showPredictionMessage("❌ Error", escapeHTML(err.message));
+        }
     }
     return false;
 }
-
 function drawChart(preds){
     var c=document.getElementById("predictionChart");
     if(!c || typeof Chart==="undefined") return;
@@ -197,24 +209,21 @@ function drawChart(preds){
         options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{max:100}}}
     });
 }
-
 async function downloadReport(){
     if(!latestPrediction) return alert("Predict first");
     try{
-        var r=await fetchWithTimeout(FLASK_BASE_URL+"/download-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({patientName:latestPrediction.patientName,patientAge:latestPrediction.patientAge,patientGender:latestPrediction.patientGender,disease:latestPrediction["Predicted Disease"],confidence:latestPrediction.Confidence,description:latestPrediction.Description,severity:latestPrediction.Severity,doctor:latestPrediction.Doctor,precautions:latestPrediction.Precautions})}, 60000);
+        var r=await fetchWithRetry(FLASK_BASE_URL+"/download-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({patientName:latestPrediction.patientName,patientAge:latestPrediction.patientAge,patientGender:latestPrediction.patientGender,disease:latestPrediction["Predicted Disease"],confidence:latestPrediction.Confidence,description:latestPrediction.Description,severity:latestPrediction.Severity,doctor:latestPrediction.Doctor,precautions:latestPrediction.Precautions})}, 90000, 1);
         var b=await r.blob(); var u=URL.createObjectURL(b); var a=document.createElement("a"); a.href=u; a.download="Report.pdf"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); },1000);
     }catch(e){ alert("Download failed: "+e.message); }
 }
-
 async function sendReportEmail(){
     if(!latestPrediction){ alert("Please predict first!"); return; }
     var email=prompt("Enter patient email address:");
     if(!email) return;
     email=email.trim();
     if(email.indexOf("@")===-1){ alert("Invalid email!"); return; }
-    alert("⏳ Sending... wait 10 sec");
     try{
-        var r=await fetchWithTimeout(FLASK_BASE_URL+"/send-report-email",{
+        var r=await fetchWithRetry(FLASK_BASE_URL+"/send-report-email",{
             method:"POST",
             headers:{"Content-Type":"application/json","Accept":"application/json"},
             body:JSON.stringify({
@@ -229,21 +238,23 @@ async function sendReportEmail(){
                 doctor:latestPrediction.Doctor,
                 precautions:latestPrediction.Precautions
             })
-        }, 90000);
+        }, 120000, 2);
         var txt = await r.text();
         var j;
-        try{ j = JSON.parse(txt); } catch(e){ throw new Error(txt || "Server returned empty response"); }
+        try{ j=JSON.parse(txt); } catch(e){ throw new Error("Server waking, auto retrying..."); }
         alert(j.message);
     }catch(err){
-        alert("❌ "+err.message);
+        if(err.message.includes("WAKING") || err.message.includes("waking")){
+            alert("⏳ Server was sleeping, waking up... Please click Email again after 15 seconds");
+        } else {
+            alert("❌ "+err.message);
+        }
     }
 }
-
 function findHospitals(){
     if(!navigator.geolocation) return alert("No geolocation");
     navigator.geolocation.getCurrentPosition(function(p){ window.open("https://www.google.com/maps/search/hospitals/@"+p.coords.latitude+","+p.coords.longitude+",15z","_blank"); });
 }
-
 async function sendMessage(){
     var inp=document.getElementById("chatInput");
     var chat=document.getElementById("chatMessages");
@@ -251,14 +262,13 @@ async function sendMessage(){
     var txt=inp.value.trim(); if(!txt) return;
     var u=document.createElement("div"); u.className="user-message"; u.textContent=txt; chat.appendChild(u); inp.value=""; chat.scrollTop=chat.scrollHeight;
     try{
-        var r=await fetchWithTimeout(FLASK_BASE_URL+"/chatbot",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:txt})}, 30000);
+        var r=await fetchWithRetry(FLASK_BASE_URL+"/chatbot",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:txt})}, 90000, 1);
         var j=await parseJSONResponse(r,"Chat");
         var b=document.createElement("div"); b.className="bot-message"; b.textContent=j.reply||"No reply"; chat.appendChild(b); chat.scrollTop=chat.scrollHeight;
     }catch(e){
-        var b2=document.createElement("div"); b2.className="bot-message"; b2.textContent="Chatbot offline"; chat.appendChild(b2);
+        var b2=document.createElement("div"); b2.className="bot-message"; b2.textContent="Chatbot waking up, try again"; chat.appendChild(b2);
     }
 }
-
 async function bookAppointment(e){
     if(e){ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }
     var nameEl=document.getElementById("appointmentName");
@@ -282,11 +292,11 @@ async function bookAppointment(e){
     }
     if(box) box.innerHTML='<div style="background:#e8f0fe; padding:12px; border-radius:10px; margin-top:12px;">🔄 Booking appointment for '+escapeHTML(data.doctor)+'...</div>';
     try{
-        var r=await fetchWithTimeout(FLASK_BASE_URL+"/book-appointment",{
+        var r=await fetchWithRetry(FLASK_BASE_URL+"/book-appointment",{
             method:"POST",
             headers:{"Content-Type":"application/json","Accept":"application/json"},
             body:JSON.stringify(data)
-        }, 60000);
+        }, 90000, 1);
         var j=await r.json().catch(function(){ return {success:true}; });
         if(box) box.innerHTML='<div style="background:#e6f4ea; border:2px solid #34a853; padding:18px; border-radius:12px; margin-top:14px;"><h3 style="color:#137333; margin:0 0 10px 0;">✅ Your appointment is successfully booked!</h3><p><strong>Patient:</strong> '+escapeHTML(data.name)+'</p><p><strong>Doctor:</strong> '+escapeHTML(data.doctor)+'</p><p><strong>Date:</strong> '+escapeHTML(data.date)+' at '+escapeHTML(data.time)+'</p><p>📧 Confirmation sent to <strong>'+escapeHTML(data.email)+'</strong></p></div>';
     }catch(err){
@@ -295,17 +305,15 @@ async function bookAppointment(e){
     setTimeout(function(){ var f=document.getElementById("appointmentForm"); if(f) f.reset(); }, 3000);
     return false;
 }
-
 document.addEventListener("DOMContentLoaded",function(){
     var style=document.createElement("style");
     style.innerHTML=`
-      .prediction-layout{ display: grid!important; grid-template-columns: 1.6fr 0.9fr!important; gap: 24px!important; align-items: start!important; }
-      .probability-area{ background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: sticky; top: 20px; }
-      .chart-container{ width:100%; height:350px; }
+     .prediction-layout{ display: grid!important; grid-template-columns: 1.6fr 0.9fr!important; gap: 24px!important; align-items: start!important; }
+     .probability-area{ background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: sticky; top: 20px; }
+     .chart-container{ width:100%; height:350px; }
         @media (max-width: 900px){.prediction-layout{ grid-template-columns: 1fr!important; }.probability-area{ position: static; } }
     `;
     document.head.appendChild(style);
-
     loadSymptoms();
     var searchInput=document.getElementById("search");
     if(searchInput){
