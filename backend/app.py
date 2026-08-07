@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory, send_file, current_app
 from flask_cors import CORS
 from flask_mail import Mail, Message
-import joblib, pandas as pd, os, json, traceback, socket
+import joblib, pandas as pd, os, json, traceback, socket, base64, requests
 from threading import Thread
 from dotenv import load_dotenv
 load_dotenv()
@@ -71,29 +71,50 @@ def find_file(filename):
             return base
     return FRONTEND_DIR
 
-def send_async_email(app_obj, msg_obj):
+def send_async_email(app_obj, recipient, subject, body, pdf_path):
     with app_obj.app_context():
+        # TRY RESEND HTTP FIRST - WORKS ON RENDER FREE
+        resend_key = os.environ.get("RESEND_API_KEY","").strip()
+        if resend_key:
+            try:
+                with open(pdf_path, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode()
+                payload = {
+                    "from": os.environ.get("RESEND_FROM","onboarding@resend.dev"),
+                    "to": [recipient],
+                    "subject": subject,
+                    "text": body,
+                    "attachments": [{"filename": "Health_Report.pdf", "content": b64}]
+                }
+                r = requests.post("https://api.resend.com/emails",
+                    json=payload,
+                    headers={"Authorization": f"Bearer {resend_key}","Content-Type":"application/json"},
+                    timeout=30)
+                print(f"RESEND API {r.status_code}: {r.text}")
+                if r.status_code in [200,201]:
+                    print(f"EMAIL OK VIA RESEND to {recipient}")
+                    return
+                else:
+                    print(f"RESEND FAILED, trying SMTP fallback")
+            except Exception as e:
+                print(f"RESEND ERROR {e}, trying SMTP")
+                traceback.print_exc()
+
+        # FALLBACK TO GMAIL SMTP
         try:
-            mail.send(msg_obj)
-            print(f"EMAIL OK to {msg_obj.recipients}")
+            msg = Message(subject=subject, recipients=[recipient], body=body)
+            with open(pdf_path, "rb") as fp:
+                msg.attach("Health_Report.pdf", "application/pdf", fp.read())
+            mail.send(msg)
+            print(f"EMAIL OK VIA SMTP to {recipient}")
         except Exception as e:
-            print(f"EMAIL FAIL in background: {e}")
+            print(f"EMAIL FAIL both methods: {e}")
             traceback.print_exc()
 
 @app.route('/')
 def home():
     base = find_file("login.html")
     return send_from_directory(base, "login.html")
-
-@app.route("/patient/login")
-def patient_login_page():
-    base = find_file("login.html")
-    return send_from_directory(base, "login.html")
-
-@app.route("/patient/register")
-def patient_register_page():
-    base = find_file("register.html")
-    return send_from_directory(base, "register.html")
 
 @app.route("/symptoms")
 def get_symptoms():
@@ -148,8 +169,6 @@ def send_report_email():
         recipient = str(data.get("email","")).strip()
         if not recipient or "@" not in recipient:
             return jsonify({"success":False,"message":"Invalid email"}),400
-        if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
-            return jsonify({"success":False,"message":"Mail not configured in Render"}),500
 
         pdf_path = generate_pdf({
             "patientName": data.get("patientName","Unknown"),
@@ -165,22 +184,14 @@ def send_report_email():
         if not os.path.isabs(pdf_path):
             pdf_path = os.path.join(BASE_DIR, pdf_path)
 
-        msg = Message(
-            subject=f"AI Health Report - {data.get('disease','Report')}",
-            recipients=[recipient],
-            body=f"Hello {data.get('patientName','Patient')},\nDisease: {data.get('disease')}\nDoctor: {data.get('doctor')}\nReport attached."
-        )
-        with open(pdf_path, "rb") as fp:
-            msg.attach("Health_Report.pdf", "application/pdf", fp.read())
+        subject = f"AI Health Report - {data.get('disease','Report')}"
+        body = f"Hello {data.get('patientName','Patient')},\n\nYour AI Symptom Report is attached.\nDisease: {data.get('disease')}\nConfidence: {data.get('confidence')}%\nDoctor: {data.get('doctor')}\n\nTake care."
 
-        # BACKGROUND SEND - RETURNS IMMEDIATELY, NO TIMEOUT
-        Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+        Thread(target=send_async_email, args=(current_app._get_current_object(), recipient, subject, body, pdf_path), daemon=True).start()
 
-        print(f"EMAIL QUEUED to {recipient}")
         return jsonify({"success":True,"message":f"✅ Email queued to {recipient} - Will arrive in 10 sec, check inbox/spam"})
     except Exception as e:
         traceback.print_exc()
-        print(f"EMAIL FAIL: {e}")
         return jsonify({"success":False,"message":f"Email Failed: {str(e)}"}),500
 
 @app.route("/chatbot", methods=["POST"])
