@@ -16,7 +16,7 @@ print("APP.PY IN:", BASE_DIR)
 print("FRONTEND DIR:", FRONTEND_DIR, "EXISTS:", os.path.exists(FRONTEND_DIR))
 
 os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
-os.makedirs("reports", exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
 
 # App
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
@@ -128,8 +128,50 @@ def download_report():
     return send_file(fn, as_attachment=True)
 
 @app.route("/send-report-email", methods=["POST"])
-def send_email():
-    return jsonify({"success":True,"message":"✅ Report generated! Please Download PDF."})
+def send_report_email():
+    data = request.get_json()
+    recipient = data.get("email","").strip()
+    if not recipient or "@" not in recipient:
+        return jsonify({"success":False,"message":"Invalid email"}), 400
+
+    try:
+        # 1. Generate PDF
+        pdf_path = generate_pdf({
+            "patientName": data.get("patientName","Unknown"),
+            "patientAge": data.get("patientAge","Unknown"),
+            "patientGender": data.get("patientGender","Unknown"),
+            "disease": data.get("disease","Unknown"),
+            "confidence": data.get("confidence",0),
+            "description": data.get("description",""),
+            "severity": data.get("severity","Unknown"),
+            "doctor": data.get("doctor","General Physician"),
+            "precautions": data.get("precautions",[])
+        })
+
+        # 2. Send Email with PDF attached
+        subject = f"AI Health Report - {data.get('disease','Report')}"
+        body = f"""Hello {data.get('patientName','Patient')},
+
+Your AI Symptom Checker report is attached.
+
+Disease: {data.get('disease')}
+Confidence: {data.get('confidence')}%
+Doctor: {data.get('doctor')}
+Severity: {data.get('severity')}
+
+Take care,
+AI-Symptom Checker
+"""
+        msg = Message(subject=subject, recipients=[recipient], body=body)
+        with open(pdf_path, "rb") as fp:
+            msg.attach("Health_Report.pdf", "application/pdf", fp.read())
+
+        mail.send(msg)
+        return jsonify({"success":True,"message":f"✅ Report successfully sent to {recipient}"})
+
+    except Exception as e:
+        print("Email Error:", str(e))
+        return jsonify({"success":False,"message":f"Failed to send email: {str(e)}"}), 500
 
 @app.route("/chatbot", methods=["POST"])
 def chatbot():
