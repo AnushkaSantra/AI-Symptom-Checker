@@ -1,7 +1,8 @@
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from flask import Flask, jsonify, request, send_from_directory, send_file, current_app
 from flask_cors import CORS
 from flask_mail import Mail, Message
 import joblib, pandas as pd, os, json, traceback, socket
+from threading import Thread
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -69,6 +70,15 @@ def find_file(filename):
         if os.path.exists(os.path.join(base, filename)):
             return base
     return FRONTEND_DIR
+
+def send_async_email(app_obj, msg_obj):
+    with app_obj.app_context():
+        try:
+            mail.send(msg_obj)
+            print(f"EMAIL OK to {msg_obj.recipients}")
+        except Exception as e:
+            print(f"EMAIL FAIL in background: {e}")
+            traceback.print_exc()
 
 @app.route('/')
 def home():
@@ -163,9 +173,11 @@ def send_report_email():
         with open(pdf_path, "rb") as fp:
             msg.attach("Health_Report.pdf", "application/pdf", fp.read())
 
-        mail.send(msg)
-        print(f"EMAIL OK to {recipient}")
-        return jsonify({"success":True,"message":f"✅ Sent to {recipient} - Check inbox/spam"})
+        # BACKGROUND SEND - RETURNS IMMEDIATELY, NO TIMEOUT
+        Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
+
+        print(f"EMAIL QUEUED to {recipient}")
+        return jsonify({"success":True,"message":f"✅ Email queued to {recipient} - Will arrive in 10 sec, check inbox/spam"})
     except Exception as e:
         traceback.print_exc()
         print(f"EMAIL FAIL: {e}")
