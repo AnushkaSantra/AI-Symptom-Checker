@@ -5,17 +5,16 @@ import joblib, pandas as pd, os, json, traceback, socket
 from dotenv import load_dotenv
 load_dotenv()
 
-# FIX FOR RENDER NETWORK UNREACHABLE
 orig_getaddrinfo = socket.getaddrinfo
 def getaddrinfo_ipv4(host, port, family=0, type=0, proto=0, flags=0):
-    return [r for r in orig_getaddrinfo(host, port, family, type, proto, flags) if r[0] == socket.AF_INET]
+    res = orig_getaddrinfo(host, port, family, type, proto, flags)
+    return [r for r in res if r[0] == socket.AF_INET] or res
 socket.getaddrinfo = getaddrinfo_ipv4
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 if not os.path.exists(FRONTEND_DIR):
     FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
-
 os.makedirs(os.path.join(BASE_DIR, "reports"), exist_ok=True)
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
@@ -30,7 +29,8 @@ app.config["MAIL_USE_TLS"]=os.environ.get("MAIL_USE_TLS","false").lower()=="true
 app.config["MAIL_USE_SSL"]=os.environ.get("MAIL_USE_SSL","true").lower()=="true"
 app.config["MAIL_USERNAME"]=os.environ.get("MAIL_USERNAME","").strip()
 app.config["MAIL_PASSWORD"]=os.environ.get("MAIL_PASSWORD","").replace(" ","").strip()
-app.config["MAIL_DEFAULT_SENDER"]=app.config["MAIL_USERNAME"] or "demo@aihealth.local"
+app.config["MAIL_DEFAULT_SENDER"]=app.config["MAIL_USERNAME"]
+app.config["MAIL_TIMEOUT"]=20
 mail=Mail(app)
 CORS(app)
 
@@ -121,21 +121,26 @@ def predict():
 
 @app.route("/download-report", methods=["POST"])
 def download_report():
-    data=request.get_json()
-    fn=generate_pdf({"patientName":data.get("patientName","Unknown"),"patientAge":data.get("patientAge","Unknown"),"patientGender":data.get("patientGender","Unknown"),"disease":data.get("disease","Unknown"),"confidence":data.get("confidence",0),"description":data.get("description",""),"severity":data.get("severity","Unknown"),"doctor":data.get("doctor","General Physician"),"precautions":data.get("precautions",[])})
-    if not os.path.isabs(fn):
-        fn = os.path.join(BASE_DIR, fn)
-    return send_file(fn, as_attachment=True)
+    try:
+        data=request.get_json() or {}
+        fn=generate_pdf({"patientName":data.get("patientName","Unknown"),"patientAge":data.get("patientAge","Unknown"),"patientGender":data.get("patientGender","Unknown"),"disease":data.get("disease","Unknown"),"confidence":data.get("confidence",0),"description":data.get("description",""),"severity":data.get("severity","Unknown"),"doctor":data.get("doctor","General Physician"),"precautions":data.get("precautions",[])})
+        if not os.path.isabs(fn):
+            fn = os.path.join(BASE_DIR, fn)
+        return send_file(fn, as_attachment=True)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error":str(e)}),500
 
 @app.route("/send-report-email", methods=["POST"])
 def send_report_email():
-    data = request.get_json() or {}
-    recipient = str(data.get("email","")).strip()
-    if not recipient or "@" not in recipient:
-        return jsonify({"success":False,"message":"Invalid email"}),400
-    if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
-        return jsonify({"success":False,"message":"Mail not configured"}),500
     try:
+        data = request.get_json() or {}
+        recipient = str(data.get("email","")).strip()
+        if not recipient or "@" not in recipient:
+            return jsonify({"success":False,"message":"Invalid email"}),400
+        if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
+            return jsonify({"success":False,"message":"Mail not configured in Render"}),500
+
         pdf_path = generate_pdf({
             "patientName": data.get("patientName","Unknown"),
             "patientAge": data.get("patientAge","Unknown"),
@@ -153,18 +158,18 @@ def send_report_email():
         msg = Message(
             subject=f"AI Health Report - {data.get('disease','Report')}",
             recipients=[recipient],
-            body=f"Hello {data.get('patientName','Patient')},\n\nYour AI Symptom Report is attached.\nDisease: {data.get('disease')}\nConfidence: {data.get('confidence')}%\nDoctor: {data.get('doctor')}\n\nTake care."
+            body=f"Hello {data.get('patientName','Patient')},\nDisease: {data.get('disease')}\nDoctor: {data.get('doctor')}\nReport attached."
         )
         with open(pdf_path, "rb") as fp:
             msg.attach("Health_Report.pdf", "application/pdf", fp.read())
 
         mail.send(msg)
-        print(f"SUCCESS: Email sent to {recipient}")
-        return jsonify({"success":True,"message":f"✅ Report sent to {recipient} - Check inbox now"})
+        print(f"EMAIL OK to {recipient}")
+        return jsonify({"success":True,"message":f"✅ Sent to {recipient} - Check inbox/spam"})
     except Exception as e:
         traceback.print_exc()
-        print(f"FAILED: {e}")
-        return jsonify({"success":False,"message":f"❌ Failed: {str(e)}"}),500
+        print(f"EMAIL FAIL: {e}")
+        return jsonify({"success":False,"message":f"Email Failed: {str(e)}"}),500
 
 @app.route("/chatbot", methods=["POST"])
 def chatbot():

@@ -206,16 +206,13 @@ async function downloadReport(){
     }catch(e){ alert("Download failed: "+e.message); }
 }
 
-// FIXED - NO MORE ABORT ERROR
 async function sendReportEmail(){
     if(!latestPrediction){ alert("Please predict first!"); return; }
     var email=prompt("Enter patient email address:");
     if(!email) return;
     email=email.trim();
     if(email.indexOf("@")===-1){ alert("Invalid email!"); return; }
-
-    alert("⏳ Sending email, please wait 15-20 sec... Don't click again");
-
+    alert("⏳ Sending... wait 10 sec");
     try{
         var r=await fetchWithTimeout(FLASK_BASE_URL+"/send-report-email",{
             method:"POST",
@@ -232,9 +229,10 @@ async function sendReportEmail(){
                 doctor:latestPrediction.Doctor,
                 precautions:latestPrediction.Precautions
             })
-        }, 90000); // 90 sec timeout for email
-
-        var j=await r.json();
+        }, 90000);
+        var txt = await r.text();
+        var j;
+        try{ j = JSON.parse(txt); } catch(e){ throw new Error(txt || "Server returned empty response"); }
         alert(j.message);
     }catch(err){
         alert("❌ "+err.message);
